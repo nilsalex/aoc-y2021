@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::fs::File;
 use std::io::{self, BufRead};
 
@@ -23,6 +24,34 @@ fn part1() -> i32 {
     }
 
     panic!()
+}
+
+fn part2() -> i32 {
+    let file = File::open("input.txt").unwrap();
+    let mut lines = io::BufReader::new(file).lines();
+
+    let numbers = parse_numbers(&lines.next().unwrap().unwrap());
+    lines.next();
+
+    let mut grids = parse_grids(&mut lines);
+    let grid_count = grids.len();
+
+    let mut finished_grids: HashSet<usize> = HashSet::new();
+
+    for number in numbers {
+        for (i, grid) in grids.iter_mut().enumerate() {
+            mark_grid(grid, number);
+
+            if won(grid, GRID_SIZE) {
+                finished_grids.insert(i);
+                if finished_grids.len() == grid_count {
+                    return number * score(grid);
+                }
+            }
+        }
+    }
+
+    panic!();
 }
 
 fn score(grid: &[(i32, bool)]) -> i32 {
@@ -93,4 +122,5 @@ fn parse_grid_line(line: &str) -> Vec<(i32, bool)> {
 
 fn main() {
     println!("{}", part1());
+    println!("{}", part2());
 }
