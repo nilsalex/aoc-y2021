@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use rustc_hash::FxHashSet;
 use std::fs::File;
 use std::io::{self, BufRead};
 
@@ -35,8 +35,8 @@ fn part1() -> usize {
     let lines = parse_input(INPUT_FILE);
     let non_diagonal: Vec<Line> = lines.filter(|l| l.is_non_diagonal()).collect();
 
-    let mut points_once: HashSet<(i32, i32)> = HashSet::new();
-    let mut points_twice: HashSet<(i32, i32)> = HashSet::new();
+    let mut points_once: FxHashSet<(i32, i32)> = FxHashSet::default();
+    let mut points_twice: FxHashSet<(i32, i32)> = FxHashSet::default();
 
     for line in non_diagonal {
         let (dx, dy, c) = line.slope_and_count();
@@ -56,8 +56,8 @@ fn part1() -> usize {
 fn part2() -> usize {
     let lines: Vec<Line> = parse_input(INPUT_FILE).collect();
 
-    let mut points_once: HashSet<(i32, i32)> = HashSet::new();
-    let mut points_twice: HashSet<(i32, i32)> = HashSet::new();
+    let mut points_once: FxHashSet<(i32, i32)> = FxHashSet::default();
+    let mut points_twice: FxHashSet<(i32, i32)> = FxHashSet::default();
 
     for line in lines {
         let (dx, dy, c) = line.slope_and_count();
