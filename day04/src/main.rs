@@ -2,10 +2,11 @@ use std::collections::HashSet;
 use std::fs::File;
 use std::io::{self, BufRead};
 
+const INPUT_FILE: &str = "day04/input.txt";
 const GRID_SIZE: usize = 5;
 
 fn part1() -> i32 {
-    let file = File::open("input.txt").unwrap();
+    let file = File::open(INPUT_FILE).unwrap();
     let mut lines = io::BufReader::new(file).lines();
 
     let numbers = parse_numbers(&lines.next().unwrap().unwrap());
@@ -27,7 +28,7 @@ fn part1() -> i32 {
 }
 
 fn part2() -> i32 {
-    let file = File::open("input.txt").unwrap();
+    let file = File::open(INPUT_FILE).unwrap();
     let mut lines = io::BufReader::new(file).lines();
 
     let numbers = parse_numbers(&lines.next().unwrap().unwrap());

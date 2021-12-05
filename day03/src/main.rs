@@ -6,13 +6,14 @@ enum FilterMode {
     LeastCommon,
 }
 
+const INPUT_FILE: &str = "day03/input.txt";
 const NUM_BITS: usize = 12;
 
 fn part1() -> i32 {
     let mut bits: [i32; NUM_BITS] = [0; NUM_BITS];
     let mut count: i32 = 0;
 
-    if let Ok(file) = File::open("input.txt") {
+    if let Ok(file) = File::open(INPUT_FILE) {
         for line in io::BufReader::new(file).lines().flatten() {
             count += 1;
             for (i, c) in line.chars().enumerate() {
@@ -41,7 +42,7 @@ fn part1() -> i32 {
 fn part2() -> i32 {
     let mut numbers: Vec<Vec<i32>> = vec![];
 
-    if let Ok(file) = File::open("input.txt") {
+    if let Ok(file) = File::open(INPUT_FILE) {
         for line in io::BufReader::new(file).lines().flatten() {
             let mut number: Vec<i32> = vec![];
             number.reserve(NUM_BITS);
