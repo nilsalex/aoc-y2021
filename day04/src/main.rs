@@ -1,70 +1,74 @@
 use std::collections::HashSet;
 use std::fs::File;
 use std::io::{self, BufRead};
+use std::num::ParseIntError;
 
-const INPUT_FILE: &str = "day04/input.txt";
 const GRID_SIZE: usize = 5;
 
-fn part1() -> i32 {
-    let file = File::open(INPUT_FILE).unwrap();
-    let mut lines = io::BufReader::new(file).lines();
+#[derive(Debug)]
+enum Error {
+    ParseInt(std::num::ParseIntError),
+    ParseFile,
+    IO,
+    NoWinner,
+    NotAllGridsWin,
+}
 
-    let numbers = parse_numbers(&lines.next().unwrap().unwrap());
-    lines.next();
+impl From<io::Error> for Error {
+    fn from(_: io::Error) -> Self {
+        Error::IO
+    }
+}
 
-    let mut grids = parse_grids(&mut lines);
+impl From<std::num::ParseIntError> for Error {
+    fn from(error: std::num::ParseIntError) -> Self {
+        Error::ParseInt(error)
+    }
+}
 
-    for number in numbers {
-        for grid in grids.iter_mut() {
+#[derive(Clone)]
+struct Game {
+    numbers: Vec<i32>,
+    grids: Vec<Vec<(i32, bool)>>,
+}
+
+fn part1(game: &mut Game) -> Result<i32, Error> {
+    for number in &game.numbers {
+        for grid in game.grids.iter_mut() {
             mark_grid(grid, number);
 
             if won(grid, GRID_SIZE) {
-                return number * score(grid);
+                return Ok(number * score(grid));
             }
         }
     }
 
-    panic!()
+    Err(Error::NoWinner)
 }
 
-fn part2() -> i32 {
-    let file = File::open(INPUT_FILE).unwrap();
-    let mut lines = io::BufReader::new(file).lines();
-
-    let numbers = parse_numbers(&lines.next().unwrap().unwrap());
-    lines.next();
-
-    let mut grids = parse_grids(&mut lines);
-    let grid_count = grids.len();
+fn part2(game: &mut Game) -> Result<i32, Error> {
+    let grid_count = game.grids.len();
 
     let mut finished_grids: HashSet<usize> = HashSet::new();
 
-    for number in numbers {
-        for (i, grid) in grids.iter_mut().enumerate() {
+    for number in &game.numbers {
+        for (i, grid) in game.grids.iter_mut().enumerate() {
             mark_grid(grid, number);
 
             if won(grid, GRID_SIZE) {
                 finished_grids.insert(i);
                 if finished_grids.len() == grid_count {
-                    return number * score(grid);
+                    return Ok(number * score(grid));
                 }
             }
         }
     }
 
-    panic!();
+    Err(Error::NotAllGridsWin)
 }
 
 fn score(grid: &[(i32, bool)]) -> i32 {
-    let mut sum = 0;
-
-    for (i, flag) in grid {
-        if !flag {
-            sum += i;
-        }
-    }
-
-    sum
+    grid.iter().filter(|x| !x.1).map(|x| x.0).sum()
 }
 
 fn won(grid: &[(i32, bool)], grid_size: usize) -> bool {
@@ -87,19 +91,21 @@ fn won(grid: &[(i32, bool)], grid_size: usize) -> bool {
     false
 }
 
-fn mark_grid(grid: &mut Vec<(i32, bool)>, number: i32) {
-    for (i, flag) in grid {
-        if *i == number {
+fn mark_grid(grid: &mut Vec<(i32, bool)>, number: &i32) {
+    grid.iter_mut().for_each(|(i, flag)| {
+        if *i == *number {
             *flag = true;
         }
-    }
+    })
 }
 
-fn parse_numbers(line: &str) -> Vec<i32> {
-    line.split(',').map(|s| s.parse().unwrap()).collect()
+fn parse_numbers(line: &str) -> Result<Vec<i32>, ParseIntError> {
+    line.split(',').map(|s| s.parse()).collect()
 }
 
-fn parse_grids(lines: &mut io::Lines<io::BufReader<File>>) -> Vec<Vec<(i32, bool)>> {
+fn parse_grids(
+    lines: &mut io::Lines<io::BufReader<File>>,
+) -> Result<Vec<Vec<(i32, bool)>>, ParseIntError> {
     let mut grids: Vec<Vec<(i32, bool)>> = vec![];
 
     let mut grid: Vec<(i32, bool)> = vec![];
@@ -108,20 +114,37 @@ fn parse_grids(lines: &mut io::Lines<io::BufReader<File>>) -> Vec<Vec<(i32, bool
             grids.push(grid);
             grid = vec![]
         } else {
-            grid.append(&mut parse_grid_line(&line))
+            grid.append(&mut parse_grid_line(&line)?)
         }
     }
     grids.push(grid);
-    grids
+    Ok(grids)
 }
 
-fn parse_grid_line(line: &str) -> Vec<(i32, bool)> {
+fn parse_grid_line(line: &str) -> Result<Vec<(i32, bool)>, ParseIntError> {
     line.split_whitespace()
-        .map(|s| (s.parse().unwrap(), false))
+        .map(|s| s.parse().map(|parsed| (parsed, false)))
         .collect()
 }
 
-fn main() {
-    println!("{}", part1());
-    println!("{}", part2());
+fn parse_input(filename: &str) -> Result<Game, Error> {
+    let file = File::open(filename)?;
+    let mut lines = io::BufReader::new(file).lines();
+
+    let numbers = parse_numbers(&lines.next().ok_or(Error::ParseFile)??)?;
+    lines.next();
+
+    let grids = parse_grids(&mut lines)?;
+
+    Ok(Game { numbers, grids })
+}
+
+fn main() -> Result<(), Error> {
+    const INPUT_FILE: &str = "day04/input.txt";
+    let mut game = parse_input(INPUT_FILE)?;
+
+    println!("{}", part1(&mut game.clone())?);
+    println!("{}", part2(&mut game)?);
+
+    Ok(())
 }
