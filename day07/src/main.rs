@@ -22,60 +22,43 @@ impl From<std::num::ParseIntError> for Error {
 }
 
 fn part1(positions: &[i32]) -> i32 {
-    let mut min = i32::MAX;
-    let mut max = i32::MIN;
+    let mut sorted = positions.to_vec();
+    sorted.sort_unstable();
 
-    for position in positions {
-        min = std::cmp::min(min, *position);
-        max = std::cmp::max(max, *position);
-    }
+    let guesses = if sorted.len() % 2 > 0 {
+        vec![sorted[sorted.len() / 2]]
+    } else {
+        vec![sorted[sorted.len() / 2 - 1], sorted[sorted.len() / 2]]
+    };
 
-    let mut scores: Vec<i32> = vec![0; (max - min + 1) as usize];
+    guesses
+        .iter()
+        .map(|x| result1(positions, *x))
+        .min()
+        .unwrap()
+}
 
-    for position in positions {
-        for (i, score) in scores.iter_mut().enumerate() {
-            let shift = i as i32 + min;
-
-            *score += (*position - shift).abs();
-        }
-    }
-
-    let mut min_score = i32::MAX;
-
-    for score in scores.iter() {
-        min_score = std::cmp::min(min_score, *score);
-    }
-
-    min_score
+fn result1(positions: &[i32], shift: i32) -> i32 {
+    positions.iter().map(|x| (*x - shift).abs()).sum()
 }
 
 fn part2(positions: &[i32]) -> i32 {
-    let mut min = i32::MAX;
-    let mut max = i32::MIN;
+    let len: i32 = positions.len() as i32;
+    let sum: i32 = positions.iter().sum();
+    let guess = (2 * sum + len) / (2 * len);
 
-    for position in positions {
-        min = std::cmp::min(min, *position);
-        max = std::cmp::max(max, *position);
-    }
+    [guess - 1, guess, guess + 1]
+        .iter()
+        .map(|x| result2(positions, *x))
+        .min()
+        .unwrap()
+}
 
-    let mut scores: Vec<i32> = vec![0; (max - min + 1) as usize];
-
-    for position in positions {
-        for (i, score) in scores.iter_mut().enumerate() {
-            let shift = i as i32 + min;
-
-            let dist = (*position - shift).abs();
-            *score += (dist * (dist + 1)) / 2;
-        }
-    }
-
-    let mut min_score = i32::MAX;
-
-    for score in scores.iter() {
-        min_score = std::cmp::min(min_score, *score);
-    }
-
-    min_score
+fn result2(positions: &[i32], shift: i32) -> i32 {
+    positions
+        .iter()
+        .map(|x| ((*x - shift).abs() * ((*x - shift).abs() + 1)) / 2)
+        .sum()
 }
 
 fn parse_crabs(filename: &str) -> Result<Vec<i32>, Error> {
