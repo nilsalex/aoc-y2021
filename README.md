@@ -1,3 +1,6 @@
 # advent of code 2021
 
-solutions in rust implemented with the little knowledge I have
+Solutions in rust (still learning the language).
+
+I usually commit right after solving the puzzles and try to clean up later.
+
