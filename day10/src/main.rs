@@ -21,31 +21,45 @@ fn match_opener(closer: char) -> char {
     }
 }
 
+fn parse_line(line: &str) -> Result<Vec<char>, char> {
+    let mut open_stack: Vec<char> = vec![];
+
+    for c in line.chars() {
+        match c {
+            '(' | '[' | '{' | '<' => open_stack.push(c),
+            ')' | ']' | '}' | '>' => {
+                if open_stack.pop().unwrap() != match_opener(c) {
+                    return Err(c);
+                }
+            }
+            _ => panic!(),
+        }
+    }
+
+    Ok(open_stack)
+}
+
 fn part1() -> i32 {
     const INPUT_FILE: &str = "day10/input.txt";
     let file = File::open(INPUT_FILE).unwrap();
     let lines = io::BufReader::new(file).lines().flatten();
 
-    let mut final_score: i32 = 0;
+    lines
+        .filter_map(|line| match parse_line(&line) {
+            Ok(_) => None,
+            Err(c) => Some(score(c)),
+        })
+        .sum()
+}
 
-    for line in lines {
-        let mut open_stack: Vec<char> = vec![];
-
-        for c in line.chars() {
-            match c {
-                '(' | '[' | '{' | '<' => open_stack.push(c),
-                ')' | ']' | '}' | '>' => {
-                    if open_stack.pop().unwrap() != match_opener(c) {
-                        final_score += score(c);
-                        break;
-                    }
-                }
-                _ => panic!(),
-            }
-        }
-    }
-
-    final_score
+fn stack_score(stack: &[char]) -> usize {
+    stack.iter().rev().fold(0_usize, |acc, c| match c {
+        '(' => acc * 5 + 1,
+        '[' => acc * 5 + 2,
+        '{' => acc * 5 + 3,
+        '<' => acc * 5 + 4,
+        _ => panic!(),
+    })
 }
 
 fn part2() -> usize {
@@ -53,37 +67,9 @@ fn part2() -> usize {
     let file = File::open(INPUT_FILE).unwrap();
     let lines = io::BufReader::new(file).lines().flatten();
 
-    let mut scores: Vec<usize> = vec![];
-
-    'outer: for line in lines {
-        let mut open_stack: Vec<char> = vec![];
-
-        for c in line.chars() {
-            match c {
-                '(' | '[' | '{' | '<' => open_stack.push(c),
-                ')' | ']' | '}' | '>' => {
-                    if open_stack.pop().unwrap() != match_opener(c) {
-                        continue 'outer;
-                    }
-                }
-                _ => panic!(),
-            }
-        }
-
-        let mut score: usize = 0;
-
-        for c in open_stack.iter().rev() {
-            match c {
-                '(' => score = score * 5 + 1,
-                '[' => score = score * 5 + 2,
-                '{' => score = score * 5 + 3,
-                '<' => score = score * 5 + 4,
-                _ => panic!(),
-            }
-        }
-
-        scores.push(score);
-    }
+    let mut scores: Vec<usize> = lines
+        .filter_map(|line| parse_line(&line).ok().map(|stack| stack_score(&stack)))
+        .collect();
 
     scores.sort_unstable();
 
