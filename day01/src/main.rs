@@ -1,26 +1,38 @@
+#![feature(test)]
+
 use std::fs::File;
 use std::io::{self, BufRead};
 
-const INPUT_FILE: &str = "day01/input.txt";
+extern crate test;
 
-fn part1() -> i32 {
-    let mut first_pass: bool = true;
-    let mut prev: i32 = 0;
-    let mut counter: i32 = 0;
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use test::Bencher;
 
-    if let Ok(file) = File::open(INPUT_FILE) {
-        for line in io::BufReader::new(file).lines().flatten() {
-            if let Ok(parsed) = line.parse::<i32>() {
-                if !first_pass && parsed > prev {
-                    counter += 1;
-                }
-                first_pass = false;
-                prev = parsed;
-            }
-        }
+    #[bench]
+    fn part1_bench(b: &mut Bencher) {
+        b.iter(part1)
     }
 
-    counter
+    #[bench]
+    fn part2_bench(b: &mut Bencher) {
+        b.iter(part2)
+    }
+}
+
+fn part1() -> i32 {
+    if let Ok(file) = File::open("input.txt") {
+        let lines = io::BufReader::new(file).lines();
+        lines
+            .filter_map(|l| l.ok().and_then(|l_| l_.parse::<i32>().ok()))
+            .fold((0, i32::MAX), |(acc, prev), x| {
+                (if x > prev { acc + 1 } else { acc }, x)
+            })
+            .0
+    } else {
+        panic!();
+    }
 }
 
 fn part2() -> i32 {
@@ -29,7 +41,7 @@ fn part2() -> i32 {
     let mut prev3: i32 = 0;
     let mut counter: i32 = 0;
 
-    if let Ok(file) = File::open(INPUT_FILE) {
+    if let Ok(file) = File::open("day01/input.txt") {
         for (i, line) in io::BufReader::new(file).lines().enumerate() {
             if let Ok(num) = line {
                 if let Ok(parsed) = num.parse::<i32>() {
