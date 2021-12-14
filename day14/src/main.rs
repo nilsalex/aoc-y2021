@@ -3,8 +3,18 @@ use std::fs::File;
 use std::hash::Hash;
 use std::io::{self, BufRead};
 
+struct Data {
+    pairs: HashMap<(char, char), usize>,
+    counts: HashMap<char, usize>,
+    rules: HashMap<(char, char), char>,
+}
+
 fn part1() -> usize {
-    let (mut pairs, mut counts, rules) = parse_input();
+    let Data {
+        mut pairs,
+        mut counts,
+        rules,
+    } = parse_input();
 
     for _ in 0..10 {
         step(&mut pairs, &mut counts, &rules);
@@ -17,7 +27,11 @@ fn part1() -> usize {
 }
 
 fn part2() -> usize {
-    let (mut pairs, mut counts, rules) = parse_input();
+    let Data {
+        mut pairs,
+        mut counts,
+        rules,
+    } = parse_input();
 
     for _ in 0..40 {
         step(&mut pairs, &mut counts, &rules);
@@ -29,11 +43,7 @@ fn part2() -> usize {
     max_count - min_count
 }
 
-fn parse_input() -> (
-    HashMap<(char, char), usize>,
-    HashMap<char, usize>,
-    HashMap<(char, char), char>,
-) {
+fn parse_input() -> Data {
     const INPUT_FILE: &str = "day14/input.txt";
     let file = File::open(INPUT_FILE).unwrap();
     let mut lines = io::BufReader::new(file).lines().flatten();
@@ -66,7 +76,11 @@ fn parse_input() -> (
         })
         .collect();
 
-    (pairs, counts, rules)
+    Data {
+        pairs,
+        counts,
+        rules,
+    }
 }
 
 fn step(
