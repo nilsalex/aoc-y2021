@@ -1,6 +1,28 @@
+#![feature(test)]
+mod bench;
+
 use std::fs::File;
 use std::io::{self, BufRead};
 use std::num::ParseIntError;
+use utils::AocSolution;
+
+pub struct Solution {
+    input_path: String,
+}
+
+impl AocSolution<usize, usize> for Solution {
+    fn part1(&self) -> usize {
+        part1(&self.input_path)
+    }
+    fn part2(&self) -> usize {
+        part2(&self.input_path)
+    }
+    fn with_input_path(input_path: &str) -> Self {
+        Solution {
+            input_path: input_path.to_owned(),
+        }
+    }
+}
 
 #[derive(Debug)]
 enum Error {
@@ -21,8 +43,9 @@ impl From<std::num::ParseIntError> for Error {
     }
 }
 
-fn part1(fish: &[u8]) -> usize {
-    let mut fish_hist: [usize; 9] = new_hist(fish);
+fn part1(input_path: &str) -> usize {
+    let fish: Vec<u8> = parse_fish(input_path).unwrap();
+    let mut fish_hist: [usize; 9] = new_hist(&fish);
 
     for _ in 0..80 {
         next(&mut fish_hist);
@@ -31,8 +54,9 @@ fn part1(fish: &[u8]) -> usize {
     fish_hist.iter().sum()
 }
 
-fn part2(fish: &[u8]) -> usize {
-    let mut fish_hist: [usize; 9] = new_hist(fish);
+fn part2(input_path: &str) -> usize {
+    let fish: Vec<u8> = parse_fish(input_path).unwrap();
+    let mut fish_hist: [usize; 9] = new_hist(&fish);
 
     for _ in 0..256 {
         next(&mut fish_hist);
@@ -69,12 +93,4 @@ fn parse_fish(filename: &str) -> Result<Vec<u8>, Error> {
     line.split(',')
         .map(|s| s.parse().map_err(Error::from))
         .collect()
-}
-
-fn main() -> Result<(), Error> {
-    const INPUT_FILE: &str = "day06/input.txt";
-    let fish: Vec<u8> = parse_fish(INPUT_FILE)?;
-    println!("{}", part1(&fish));
-    println!("{}", part2(&fish));
-    Ok(())
 }
