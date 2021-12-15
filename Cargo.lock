@@ -9,15 +9,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cdb031dd78e28731d87d56cc8ffef4a8f36ca26c38fe2de700543e627f8a464a"
 
 [[package]]
-name = "benchmarks"
-version = "0.1.0"
-dependencies = [
- "day01",
- "day02",
- "utils",
-]
-
-[[package]]
 name = "day01"
 version = "0.1.0"
 dependencies = [
@@ -34,6 +25,9 @@ dependencies = [
 [[package]]
 name = "day03"
 version = "0.1.0"
+dependencies = [
+ "utils",
+]
 
 [[package]]
 name = "day04"
@@ -186,6 +180,16 @@ name = "rustc-hash"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "08d43f7aa6b08d49f382cde6a7982047c3426db949b1424bc4b7ec9ae12c6ce2"
+
+[[package]]
+name = "solutions"
+version = "0.1.0"
+dependencies = [
+ "day01",
+ "day02",
+ "day03",
+ "utils",
+]
 
 [[package]]
 name = "utils"

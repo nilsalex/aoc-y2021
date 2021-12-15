@@ -2,7 +2,7 @@
 
 members = [
     "utils",
-    "benchmarks",
+    "solutions",
     "day01",
     "day02",
     "day03",
