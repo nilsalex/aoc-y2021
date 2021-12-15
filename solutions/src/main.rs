@@ -65,4 +65,12 @@ fn main() {
         "Day 08 part 2: {}",
         day08::Solution::with_input_path("day08/input.txt").part2()
     );
+    println!(
+        "Day 09 part 1: {}",
+        day09::Solution::with_input_path("day09/input.txt").part1()
+    );
+    println!(
+        "Day 09 part 2: {}",
+        day09::Solution::with_input_path("day09/input.txt").part2()
+    );
 }

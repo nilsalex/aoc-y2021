@@ -1,10 +1,31 @@
+#![feature(test)]
+mod bench;
+
 use std::collections::HashSet;
 use std::fs::File;
 use std::io::{self, BufRead};
+use utils::AocSolution;
 
-fn part1() -> i32 {
-    const INPUT_FILE: &str = "day09/input.txt";
-    let file = File::open(INPUT_FILE).unwrap();
+pub struct Solution {
+    input_path: String,
+}
+
+impl AocSolution<i32, usize> for Solution {
+    fn part1(&self) -> i32 {
+        part1(&self.input_path)
+    }
+    fn part2(&self) -> usize {
+        part2(&self.input_path)
+    }
+    fn with_input_path(input_path: &str) -> Self {
+        Solution {
+            input_path: input_path.to_owned(),
+        }
+    }
+}
+
+fn part1(input_path: &str) -> i32 {
+    let file = File::open(input_path).unwrap();
     let lines = io::BufReader::new(file).lines().flatten();
     let mut map_: Vec<Vec<i32>> = lines
         .map(|l| {
@@ -35,9 +56,8 @@ fn part1() -> i32 {
     minima.iter().sum()
 }
 
-fn part2() -> usize {
-    const INPUT_FILE: &str = "day09/input.txt";
-    let file = File::open(INPUT_FILE).unwrap();
+fn part2(input_path: &str) -> usize {
+    let file = File::open(input_path).unwrap();
     let lines = io::BufReader::new(file).lines().flatten();
     let mut map_: Vec<Vec<i32>> = lines
         .map(|l| {
@@ -82,9 +102,4 @@ fn explore_basin(map: &[Vec<i32>], x: usize, y: usize, seen: &mut HashSet<(usize
     for (x_, y_) in directions {
         explore_basin(map, x_, y_, seen);
     }
-}
-
-fn main() {
-    println!("{}", part1());
-    println!("{}", part2());
 }
