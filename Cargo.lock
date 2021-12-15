@@ -13,6 +13,7 @@ name = "benchmarks"
 version = "0.1.0"
 dependencies = [
  "day01",
+ "day02",
  "utils",
 ]
 
@@ -26,6 +27,9 @@ dependencies = [
 [[package]]
 name = "day02"
 version = "0.1.0"
+dependencies = [
+ "utils",
+]
 
 [[package]]
 name = "day03"
