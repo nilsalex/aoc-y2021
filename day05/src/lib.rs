@@ -1,7 +1,29 @@
+#![feature(test)]
+mod bench;
+
 use rustc_hash::FxHashSet;
 use std::fs::File;
 use std::io::{self, BufRead};
 use std::num::ParseIntError;
+use utils::AocSolution;
+
+pub struct Solution {
+    input_path: String,
+}
+
+impl AocSolution<usize, usize> for Solution {
+    fn part1(&self) -> usize {
+        part1(&self.input_path)
+    }
+    fn part2(&self) -> usize {
+        part2(&self.input_path)
+    }
+    fn with_input_path(input_path: &str) -> Self {
+        Solution {
+            input_path: input_path.to_owned(),
+        }
+    }
+}
 
 #[derive(Debug)]
 enum Error {
@@ -48,7 +70,8 @@ impl Line {
     }
 }
 
-fn part1(lines: &[Line]) -> usize {
+fn part1(input_path: &str) -> usize {
+    let lines: Vec<Line> = parse_input(input_path).unwrap();
     let non_diagonal: Vec<&Line> = lines.iter().filter(|l| l.is_non_diagonal()).collect();
 
     let mut points_once: FxHashSet<(i32, i32)> = FxHashSet::default();
@@ -69,7 +92,8 @@ fn part1(lines: &[Line]) -> usize {
     points_twice.len()
 }
 
-fn part2(lines: &[Line]) -> usize {
+fn part2(input_path: &str) -> usize {
+    let lines: Vec<Line> = parse_input(input_path).unwrap();
     let mut points_once: FxHashSet<(i32, i32)> = FxHashSet::default();
     let mut points_twice: FxHashSet<(i32, i32)> = FxHashSet::default();
 
@@ -111,12 +135,4 @@ fn parse_line(input_line: &str) -> Result<Line, Error> {
         end_x: end[0],
         end_y: end[1],
     })
-}
-
-fn main() -> Result<(), Error> {
-    const INPUT_FILE: &str = "day05/input.txt";
-    let lines: Vec<Line> = parse_input(INPUT_FILE)?;
-    println!("{}", part1(&lines));
-    println!("{}", part2(&lines));
-    Ok(())
 }
