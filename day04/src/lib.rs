@@ -1,12 +1,32 @@
+#![feature(test)]
+mod bench;
+
 use std::collections::HashSet;
 use std::fs::File;
 use std::io::{self, BufRead};
 use std::num::ParseIntError;
+use utils::AocSolution;
 
-const GRID_SIZE: usize = 5;
+pub struct Solution {
+    input_path: String,
+}
+
+impl AocSolution<i32, i32> for Solution {
+    fn part1(&self) -> i32 {
+        part1(&self.input_path).unwrap()
+    }
+    fn part2(&self) -> i32 {
+        part2(&self.input_path).unwrap()
+    }
+    fn with_input_path(input_path: &str) -> Self {
+        Solution {
+            input_path: input_path.to_owned(),
+        }
+    }
+}
 
 #[derive(Debug)]
-enum Error {
+pub enum Error {
     ParseInt(std::num::ParseIntError),
     ParseFile,
     IO,
@@ -26,13 +46,15 @@ impl From<std::num::ParseIntError> for Error {
     }
 }
 
-#[derive(Clone)]
 struct Game {
     numbers: Vec<i32>,
     grids: Vec<Vec<(i32, bool)>>,
 }
 
-fn part1(game: &mut Game) -> Result<i32, Error> {
+fn part1(input_path: &str) -> Result<i32, Error> {
+    const GRID_SIZE: usize = 5;
+    let mut game = parse_input(input_path)?;
+
     for number in &game.numbers {
         for grid in game.grids.iter_mut() {
             mark_grid(grid, number);
@@ -46,7 +68,9 @@ fn part1(game: &mut Game) -> Result<i32, Error> {
     Err(Error::NoWinner)
 }
 
-fn part2(game: &mut Game) -> Result<i32, Error> {
+fn part2(input_path: &str) -> Result<i32, Error> {
+    const GRID_SIZE: usize = 5;
+    let mut game = parse_input(input_path)?;
     let grid_count = game.grids.len();
 
     let mut finished_grids: HashSet<usize> = HashSet::new();
@@ -137,14 +161,4 @@ fn parse_input(filename: &str) -> Result<Game, Error> {
     let grids = parse_grids(&mut lines)?;
 
     Ok(Game { numbers, grids })
-}
-
-fn main() -> Result<(), Error> {
-    const INPUT_FILE: &str = "day04/input.txt";
-    let mut game = parse_input(INPUT_FILE)?;
-
-    println!("{}", part1(&mut game.clone())?);
-    println!("{}", part2(&mut game)?);
-
-    Ok(())
 }

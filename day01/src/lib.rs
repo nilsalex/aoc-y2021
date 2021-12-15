@@ -9,12 +9,12 @@ pub struct Solution {
     input_path: String,
 }
 
-impl AocSolution for Solution {
-    fn part1(&self) -> String {
-        part1(&self.input_path).to_string()
+impl AocSolution<i32, i32> for Solution {
+    fn part1(&self) -> i32 {
+        part1(&self.input_path)
     }
-    fn part2(&self) -> String {
-        part2(&self.input_path).to_string()
+    fn part2(&self) -> i32 {
+        part2(&self.input_path)
     }
     fn with_input_path(input_path: &str) -> Self {
         Solution {
