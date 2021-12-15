@@ -1,5 +1,27 @@
+#![feature(test)]
+mod bench;
+
 use std::fs::File;
 use std::io::{self, BufRead};
+use utils::AocSolution;
+
+pub struct Solution {
+    input_path: String,
+}
+
+impl AocSolution<i32, usize> for Solution {
+    fn part1(&self) -> i32 {
+        part1(&self.input_path)
+    }
+    fn part2(&self) -> usize {
+        part2(&self.input_path)
+    }
+    fn with_input_path(input_path: &str) -> Self {
+        Solution {
+            input_path: input_path.to_owned(),
+        }
+    }
+}
 
 fn score(closer: char) -> i32 {
     match closer {
@@ -39,9 +61,8 @@ fn parse_line(line: &str) -> Result<Vec<char>, char> {
     Ok(open_stack)
 }
 
-fn part1() -> i32 {
-    const INPUT_FILE: &str = "day10/input.txt";
-    let file = File::open(INPUT_FILE).unwrap();
+fn part1(input_path: &str) -> i32 {
+    let file = File::open(input_path).unwrap();
     let lines = io::BufReader::new(file).lines().flatten();
 
     lines
@@ -62,9 +83,8 @@ fn stack_score(stack: &[char]) -> usize {
     })
 }
 
-fn part2() -> usize {
-    const INPUT_FILE: &str = "day10/input.txt";
-    let file = File::open(INPUT_FILE).unwrap();
+fn part2(input_path: &str) -> usize {
+    let file = File::open(input_path).unwrap();
     let lines = io::BufReader::new(file).lines().flatten();
 
     let mut scores: Vec<usize> = lines
@@ -74,9 +94,4 @@ fn part2() -> usize {
     scores.sort_unstable();
 
     scores[scores.len() / 2]
-}
-
-fn main() {
-    println!("{}", part1());
-    println!("{}", part2());
 }
