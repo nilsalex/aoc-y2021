@@ -1,10 +1,31 @@
+#![feature(test)]
+mod bench;
+
 use std::collections::{HashSet, VecDeque};
 use std::fs::File;
 use std::io::{self, BufRead};
+use utils::AocSolution;
 
-fn part1() -> usize {
-    const INPUT_FILE: &str = "day11/input.txt";
-    let file = File::open(INPUT_FILE).unwrap();
+pub struct Solution {
+    input_path: String,
+}
+
+impl AocSolution<usize, usize> for Solution {
+    fn part1(&self) -> usize {
+        part1(&self.input_path)
+    }
+    fn part2(&self) -> usize {
+        part2(&self.input_path)
+    }
+    fn with_input_path(input_path: &str) -> Self {
+        Solution {
+            input_path: input_path.to_owned(),
+        }
+    }
+}
+
+fn part1(input_path: &str) -> usize {
+    let file = File::open(input_path).unwrap();
     let mut grid: Vec<Vec<usize>> = io::BufReader::new(file)
         .lines()
         .map(|line| {
@@ -72,9 +93,8 @@ fn part1() -> usize {
     flash_counter
 }
 
-fn part2() -> usize {
-    const INPUT_FILE: &str = "day11/input.txt";
-    let file = File::open(INPUT_FILE).unwrap();
+fn part2(input_path: &str) -> usize {
+    let file = File::open(input_path).unwrap();
     let mut grid: Vec<Vec<usize>> = io::BufReader::new(file)
         .lines()
         .map(|line| {
@@ -141,9 +161,4 @@ fn part2() -> usize {
             return iteration;
         }
     }
-}
-
-fn main() {
-    println!("{}", part1());
-    println!("{}", part2());
 }
