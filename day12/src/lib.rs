@@ -1,10 +1,31 @@
+#![feature(test)]
+mod bench;
+
 use std::collections::VecDeque;
 use std::fs::File;
 use std::io::{self, BufRead};
+use utils::AocSolution;
 
-fn part1() -> usize {
-    const INPUT_FILE: &str = "day12/input.txt";
-    let file = File::open(INPUT_FILE).unwrap();
+pub struct Solution {
+    input_path: String,
+}
+
+impl AocSolution<usize, usize> for Solution {
+    fn part1(&self) -> usize {
+        part1(&self.input_path)
+    }
+    fn part2(&self) -> usize {
+        part2(&self.input_path)
+    }
+    fn with_input_path(input_path: &str) -> Self {
+        Solution {
+            input_path: input_path.to_owned(),
+        }
+    }
+}
+
+fn part1(input_path: &str) -> usize {
+    let file = File::open(input_path).unwrap();
     let lines = io::BufReader::new(file).lines().flatten();
 
     let mut edges: Vec<(String, String)> = vec![];
@@ -23,9 +44,6 @@ fn part1() -> usize {
 
     edges.sort();
     edges.dedup();
-
-    println!("{:?}", vertices);
-    println!("{:?}", edges);
 
     let mut queue: VecDeque<Vec<String>> = VecDeque::new();
     queue.push_back(vec!["start".to_owned()]);
@@ -58,9 +76,8 @@ fn part1() -> usize {
     counter
 }
 
-fn part2() -> usize {
-    const INPUT_FILE: &str = "day12/input.txt";
-    let file = File::open(INPUT_FILE).unwrap();
+fn part2(input_path: &str) -> usize {
+    let file = File::open(input_path).unwrap();
     let lines = io::BufReader::new(file).lines().flatten();
 
     let mut edges: Vec<(String, String)> = vec![];
@@ -79,9 +96,6 @@ fn part2() -> usize {
 
     edges.sort();
     edges.dedup();
-
-    println!("{:?}", vertices);
-    println!("{:?}", edges);
 
     let mut queue: VecDeque<Vec<String>> = VecDeque::new();
     queue.push_back(vec!["start".to_owned()]);
@@ -125,9 +139,4 @@ fn part2() -> usize {
     }
 
     counter
-}
-
-fn main() {
-    println!("{}", part1());
-    println!("{}", part2());
 }
