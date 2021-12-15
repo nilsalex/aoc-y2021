@@ -1,6 +1,28 @@
+#![feature(test)]
+mod bench;
+
 use itertools::Itertools;
 use std::fs::File;
 use std::io::{self, BufRead};
+use utils::AocSolution;
+
+pub struct Solution {
+    input_path: String,
+}
+
+impl AocSolution<usize, usize> for Solution {
+    fn part1(&self) -> usize {
+        part1(&self.input_path)
+    }
+    fn part2(&self) -> usize {
+        part2(&self.input_path)
+    }
+    fn with_input_path(input_path: &str) -> Self {
+        Solution {
+            input_path: input_path.to_owned(),
+        }
+    }
+}
 
 fn count_unique_in_line(line: &str) -> usize {
     let right = line.split(" | ").collect::<Vec<&str>>()[1];
@@ -86,23 +108,16 @@ fn solve_line(line: &str) -> usize {
     result as usize
 }
 
-fn part1() -> usize {
-    const INPUT_FILE: &str = "day08/input.txt";
-    let file = File::open(INPUT_FILE).unwrap();
+fn part1(input_path: &str) -> usize {
+    let file = File::open(input_path).unwrap();
     let lines = io::BufReader::new(file).lines().flatten();
 
     lines.map(|s| count_unique_in_line(&s)).sum()
 }
 
-fn part2() -> usize {
-    const INPUT_FILE: &str = "day08/input.txt";
-    let file = File::open(INPUT_FILE).unwrap();
+fn part2(input_path: &str) -> usize {
+    let file = File::open(input_path).unwrap();
     let lines = io::BufReader::new(file).lines().flatten();
 
     lines.map(|s| solve_line(&s)).sum()
-}
-
-fn main() {
-    println!("{}", part1());
-    println!("{}", part2());
 }
