@@ -1,67 +1,57 @@
-use std::cmp::Ordering;
+use std::cmp::Reverse;
 use std::collections::BinaryHeap;
 use std::fs::File;
 use std::io::{self, BufRead};
 
-#[derive(Clone, Copy, Eq, PartialEq)]
+#[derive(Clone, Copy, Ord, PartialOrd, Eq, PartialEq, Debug)]
 struct State {
-    risk: usize,
+    risk: u32,
     position: (usize, usize),
 }
 
-impl Ord for State {
-    fn cmp(&self, other: &Self) -> Ordering {
-        other
-            .risk
-            .cmp(&self.risk)
-            .then_with(|| self.position.cmp(&other.position))
-    }
-}
-
-impl PartialOrd for State {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
-fn part1() -> usize {
+fn parse_input() -> Vec<Vec<u32>> {
     const INPUT_FILE: &str = "day15/input.txt";
     let file = File::open(INPUT_FILE).unwrap();
     let lines = io::BufReader::new(file).lines().flatten();
 
-    let grid: Vec<Vec<usize>> = lines
+    lines
         .map(|line| {
             line.chars()
-                .map(|c| c.to_digit(10).unwrap() as usize)
-                .collect::<Vec<usize>>()
+                .map(|c| c.to_digit(10).unwrap())
+                .collect::<Vec<u32>>()
         })
-        .collect();
+        .collect()
+}
 
-    let mut dist: Vec<Vec<usize>> = grid
-        .iter()
-        .map(|v| v.iter().map(|_| usize::MAX).collect())
-        .collect();
-
-    let mut heap = BinaryHeap::new();
+fn part1() -> u32 {
+    let grid = parse_input();
 
     let xdim = grid[0].len();
     let ydim = grid.len();
 
+    // we need a starting point and an end point
     let start = (0, 0);
     let goal = (xdim - 1, ydim - 1);
 
+    // initialize dist and heap
+    let mut dist: Vec<Vec<u32>> = grid
+        .iter()
+        .map(|v| v.iter().map(|_| u32::MAX).collect())
+        .collect();
+
+    let mut heap = BinaryHeap::new();
+
+    // set up dist and heap for starting point
     dist[start.1][start.0] = 0;
-    heap.push(State {
+
+    heap.push(Reverse(State {
         risk: 0,
         position: start,
-    });
+    }));
 
-    let mut result = usize::MAX;
-
-    while let Some(State { risk, position }) = heap.pop() {
+    while let Some(Reverse(State { risk, position })) = heap.pop() {
         if position == goal {
-            result = risk;
-            break;
+            return risk;
         }
 
         if risk > dist[position.1][position.0] {
@@ -75,13 +65,13 @@ fn part1() -> usize {
             };
 
             if next.risk < dist[next.position.1][next.position.0] {
-                heap.push(next);
+                heap.push(Reverse(next));
                 dist[next.position.1][next.position.0] = next.risk;
             }
         }
     }
 
-    result
+    panic!();
 }
 
 fn next_positions(position: (usize, usize), xdim: usize, ydim: usize) -> Vec<(usize, usize)> {
@@ -97,47 +87,33 @@ fn next_positions(position: (usize, usize), xdim: usize, ydim: usize) -> Vec<(us
         .collect()
 }
 
-fn get_risk(grid: &[Vec<usize>], xdim: usize, ydim: usize, x: usize, y: usize) -> usize {
-    (((grid[y % ydim][x % xdim] + (y / ydim) + (x / xdim)) - 1) % 9) + 1
+fn get_risk(grid: &[Vec<u32>], xdim: usize, ydim: usize, x: usize, y: usize) -> u32 {
+    (((grid[y % ydim][x % xdim] + (y / ydim) as u32 + (x / xdim) as u32) - 1) % 9) + 1
 }
 
-fn part2() -> usize {
-    const INPUT_FILE: &str = "day15/input.txt";
-    let file = File::open(INPUT_FILE).unwrap();
-    let lines = io::BufReader::new(file).lines().flatten();
-
-    let grid: Vec<Vec<usize>> = lines
-        .map(|line| {
-            line.chars()
-                .map(|c| c.to_digit(10).unwrap() as usize)
-                .collect::<Vec<usize>>()
-        })
-        .collect();
-
-    let mut heap = BinaryHeap::new();
+fn part2() -> u32 {
+    let grid = parse_input();
 
     let xdim = grid[0].len();
     let ydim = grid.len();
 
-    let mut dist: Vec<Vec<usize>> = (0..5 * ydim)
-        .map(|_| (0..5 * xdim).map(|_| usize::MAX).collect())
-        .collect();
-
     let start = (0, 0);
     let goal = (5 * xdim - 1, 5 * ydim - 1);
 
+    let mut dist: Vec<Vec<u32>> = (0..5 * ydim)
+        .map(|_| (0..5 * xdim).map(|_| u32::MAX).collect())
+        .collect();
+    let mut heap = BinaryHeap::new();
+
     dist[start.1][start.0] = 0;
-    heap.push(State {
+    heap.push(Reverse(State {
         risk: 0,
         position: start,
-    });
+    }));
 
-    let mut result = usize::MAX;
-
-    while let Some(State { risk, position }) = heap.pop() {
+    while let Some(Reverse(State { risk, position })) = heap.pop() {
         if position == goal {
-            result = risk;
-            break;
+            return risk;
         }
 
         if risk > dist[position.1][position.0] {
@@ -151,13 +127,13 @@ fn part2() -> usize {
             };
 
             if next.risk < dist[next.position.1][next.position.0] {
-                heap.push(next);
+                heap.push(Reverse(next));
                 dist[next.position.1][next.position.0] = next.risk;
             }
         }
     }
 
-    result
+    panic!();
 }
 
 fn main() {

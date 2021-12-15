@@ -22,7 +22,7 @@ mod tests {
 }
 
 fn part1() -> i32 {
-    if let Ok(file) = File::open("input.txt") {
+    if let Ok(file) = File::open("day01/input.txt") {
         let lines = io::BufReader::new(file).lines();
         lines
             .filter_map(|l| l.ok().and_then(|l_| l_.parse::<i32>().ok()))
