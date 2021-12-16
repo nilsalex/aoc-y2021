@@ -1,7 +1,29 @@
+#![feature(test)]
+mod bench;
+
 use std::cmp::Reverse;
 use std::collections::BinaryHeap;
 use std::fs::File;
 use std::io::{self, BufRead};
+use utils::AocSolution;
+
+pub struct Solution {
+    input_path: String,
+}
+
+impl AocSolution<u32, u32> for Solution {
+    fn part1(&self) -> u32 {
+        part1(&self.input_path)
+    }
+    fn part2(&self) -> u32 {
+        part2(&self.input_path)
+    }
+    fn with_input_path(input_path: &str) -> Self {
+        Solution {
+            input_path: input_path.to_owned(),
+        }
+    }
+}
 
 #[derive(Clone, Copy, Ord, PartialOrd, Eq, PartialEq, Debug)]
 struct State {
@@ -9,9 +31,8 @@ struct State {
     position: (usize, usize),
 }
 
-fn parse_input() -> Vec<Vec<u32>> {
-    const INPUT_FILE: &str = "day15/input.txt";
-    let file = File::open(INPUT_FILE).unwrap();
+fn parse_input(input_path: &str) -> Vec<Vec<u32>> {
+    let file = File::open(input_path).unwrap();
     let lines = io::BufReader::new(file).lines().flatten();
 
     lines
@@ -23,8 +44,8 @@ fn parse_input() -> Vec<Vec<u32>> {
         .collect()
 }
 
-fn part1() -> u32 {
-    let grid = parse_input();
+fn part1(input_path: &str) -> u32 {
+    let grid = parse_input(input_path);
 
     let xdim = grid[0].len();
     let ydim = grid.len();
@@ -91,8 +112,8 @@ fn get_risk(grid: &[Vec<u32>], xdim: usize, ydim: usize, x: usize, y: usize) -> 
     (((grid[y % ydim][x % xdim] + (y / ydim) as u32 + (x / xdim) as u32) - 1) % 9) + 1
 }
 
-fn part2() -> u32 {
-    let grid = parse_input();
+fn part2(input_path: &str) -> u32 {
+    let grid = parse_input(input_path);
 
     let xdim = grid[0].len();
     let ydim = grid.len();
@@ -134,9 +155,4 @@ fn part2() -> u32 {
     }
 
     panic!();
-}
-
-fn main() {
-    println!("{}", part1());
-    println!("{}", part2());
 }
