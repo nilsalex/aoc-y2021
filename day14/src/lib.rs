@@ -1,7 +1,29 @@
+#![feature(test)]
+mod bench;
+
 use std::collections::HashMap;
 use std::fs::File;
 use std::hash::Hash;
 use std::io::{self, BufRead};
+use utils::AocSolution;
+
+pub struct Solution {
+    input_path: String,
+}
+
+impl AocSolution<usize, usize> for Solution {
+    fn part1(&self) -> usize {
+        part1(&self.input_path)
+    }
+    fn part2(&self) -> usize {
+        part2(&self.input_path)
+    }
+    fn with_input_path(input_path: &str) -> Self {
+        Solution {
+            input_path: input_path.to_owned(),
+        }
+    }
+}
 
 struct Data {
     pairs: HashMap<(char, char), usize>,
@@ -9,12 +31,12 @@ struct Data {
     rules: HashMap<(char, char), char>,
 }
 
-fn part1() -> usize {
+fn part1(input_path: &str) -> usize {
     let Data {
         mut pairs,
         mut counts,
         rules,
-    } = parse_input();
+    } = parse_input(input_path);
 
     for _ in 0..10 {
         step(&mut pairs, &mut counts, &rules);
@@ -26,12 +48,12 @@ fn part1() -> usize {
     max_count - min_count
 }
 
-fn part2() -> usize {
+fn part2(input_path: &str) -> usize {
     let Data {
         mut pairs,
         mut counts,
         rules,
-    } = parse_input();
+    } = parse_input(input_path);
 
     for _ in 0..40 {
         step(&mut pairs, &mut counts, &rules);
@@ -43,9 +65,8 @@ fn part2() -> usize {
     max_count - min_count
 }
 
-fn parse_input() -> Data {
-    const INPUT_FILE: &str = "day14/input.txt";
-    let file = File::open(INPUT_FILE).unwrap();
+fn parse_input(input_path: &str) -> Data {
+    let file = File::open(input_path).unwrap();
     let mut lines = io::BufReader::new(file).lines().flatten();
     let polymer: Vec<char> = lines.next().unwrap().chars().collect();
 
@@ -125,9 +146,4 @@ where
     } else {
         pairs.insert(new_pair, new_count);
     }
-}
-
-fn main() {
-    println!("{}", part1());
-    println!("{}", part2());
 }
