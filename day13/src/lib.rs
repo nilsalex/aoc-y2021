@@ -1,29 +1,51 @@
+#![feature(test)]
+mod bench;
+
 use std::cmp::Ordering;
 use std::collections::HashSet;
 use std::fs::File;
 use std::io::{self, BufRead};
+use utils::AocSolution;
+
+pub struct Solution {
+    input_path: String,
+}
+
+impl AocSolution<usize, String> for Solution {
+    fn part1(&self) -> usize {
+        part1(&self.input_path)
+    }
+    fn part2(&self) -> String {
+        part2(&self.input_path)
+    }
+    fn with_input_path(input_path: &str) -> Self {
+        Solution {
+            input_path: input_path.to_owned(),
+        }
+    }
+}
 
 struct Data {
     points: HashSet<(u32, u32)>,
     foldings: Vec<(char, u32)>,
 }
 
-fn part1() -> usize {
+fn part1(input_path: &str) -> usize {
     let Data {
         mut points,
         foldings,
-    } = parse_input();
+    } = parse_input(input_path);
 
     fold(&mut points, foldings[0].0, foldings[0].1);
 
     points.len()
 }
 
-fn part2() -> String {
+fn part2(input_path: &str) -> String {
     let Data {
         mut points,
         foldings,
-    } = parse_input();
+    } = parse_input(input_path);
 
     foldings.iter().for_each(|(dir, pos)| {
         fold(&mut points, *dir, *pos);
@@ -61,9 +83,8 @@ fn parse_folding(line: &str) -> (char, u32) {
     )
 }
 
-fn parse_input() -> Data {
-    const INPUT_FILE: &str = "day13/input.txt";
-    let file = File::open(INPUT_FILE).unwrap();
+fn parse_input(input_path: &str) -> Data {
+    let file = File::open(input_path).unwrap();
     let mut lines = io::BufReader::new(file).lines().flatten();
 
     let mut points: HashSet<(u32, u32)> = HashSet::new();
@@ -109,9 +130,4 @@ fn fold(points: &mut HashSet<(u32, u32)>, dir: char, pos: u32) {
             unreachable!();
         }
     })
-}
-
-fn main() {
-    println!("{}", part1());
-    println!("{}", part2());
 }
