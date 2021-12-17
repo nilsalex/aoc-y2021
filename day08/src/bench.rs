@@ -16,4 +16,14 @@ mod tests {
     fn bench_part2(b: &mut Bencher) {
         b.iter(|| Solution::with_input_path("input.txt").part2())
     }
+
+    #[test]
+    fn test_part1() {
+        assert!(Solution::with_input_path("input.txt").part1() == 278)
+    }
+
+    #[test]
+    fn test_part2() {
+        assert!(Solution::with_input_path("input.txt").part2() == 986179)
+    }
 }

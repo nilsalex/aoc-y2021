@@ -1,7 +1,7 @@
 #![feature(test)]
 mod bench;
 
-use itertools::Itertools;
+use std::collections::{HashMap, HashSet};
 use std::fs::File;
 use std::io::{self, BufRead};
 use utils::AocSolution;
@@ -33,76 +33,48 @@ fn count_unique_in_line(line: &str) -> usize {
 }
 
 fn solve_line(line: &str) -> usize {
-    let split = line.split(" | ").collect::<Vec<&str>>();
-    let mut input = split[0]
-        .split_whitespace()
-        .map(|s| {
-            let mut chars = s.chars().map(|c| c as u8 - 97).collect::<Vec<u8>>();
-            chars.sort_unstable();
-            chars
-        })
-        .collect::<Vec<Vec<u8>>>();
-    input.sort_unstable();
+    let (input, output) = line.split_once(" | ").unwrap();
 
-    let items: [u8; 7] = [0, 1, 2, 3, 4, 5, 6];
-    let numbers: Vec<Vec<u8>> = vec![
-        vec![0, 1, 2, 4, 5, 6],
-        vec![2, 5],
-        vec![0, 2, 3, 4, 6],
-        vec![0, 2, 3, 5, 6],
-        vec![1, 2, 3, 5],
-        vec![0, 1, 3, 5, 6],
-        vec![0, 1, 3, 4, 5, 6],
-        vec![0, 2, 5],
-        vec![0, 1, 2, 3, 4, 5, 6],
-        vec![0, 1, 2, 3, 5, 6],
-    ];
-
-    let mut solution_perm: Vec<u8> = vec![];
-
-    for perm in items.into_iter().permutations(items.len()) {
-        let mut numbers_permuted = numbers.clone();
-
-        for number in numbers_permuted.iter_mut() {
-            for bar in number.iter_mut() {
-                *bar = perm[*bar as usize];
+    let ref_numbers: HashMap<u8, HashSet<u8>> =
+        HashMap::from_iter(input.split_whitespace().filter_map(|s| {
+            let bars = HashSet::from_iter(s.chars().map(|c| c as u8 - 97));
+            match bars.len() {
+                2 => Some((1, bars)),
+                3 => Some((7, bars)),
+                4 => Some((4, bars)),
+                7 => Some((8, bars)),
+                _ => None,
             }
-            number.sort_unstable();
-        }
+        }));
 
-        numbers_permuted.sort();
-
-        if numbers_permuted == input {
-            solution_perm = perm.clone();
-        }
-    }
-
-    let mut solution_numbers: Vec<Vec<u8>> = numbers.into_iter().collect();
-    for number in solution_numbers.iter_mut() {
-        for bar in number.iter_mut() {
-            *bar = solution_perm[*bar as usize];
-        }
-        number.sort_unstable();
-    }
-
-    let result_digits = split[1]
+    let sol_numbers = output
         .split_whitespace()
-        .map(|s| {
-            let mut chars = s.chars().map(|c| c as u8 - 97).collect::<Vec<u8>>();
-            chars.sort_unstable();
-            for (number, pattern) in solution_numbers.iter().enumerate() {
-                if chars == *pattern {
-                    return number as i32;
-                }
-            }
-            panic!();
-        })
-        .collect::<Vec<i32>>();
+        .map(|s| HashSet::from_iter(s.chars().map(|c| c as u8 - 97)));
 
-    let mut result: i32 = 0;
+    let digits = sol_numbers.map(|number| match number.len() {
+        2 => 1,
+        3 => 7,
+        4 => 4,
+        7 => 8,
+        _ => match (
+            number.intersection(ref_numbers.get(&4).unwrap()).count(),
+            number.intersection(ref_numbers.get(&7).unwrap()).count(),
+            number.intersection(ref_numbers.get(&8).unwrap()).count(),
+        ) {
+            (3, 3, 6) => 0,
+            (2, 2, 5) => 2,
+            (3, 3, 5) => 3,
+            (3, 2, 5) => 5,
+            (3, 2, 6) => 6,
+            (4, 3, 6) => 9,
+            _ => unreachable!(),
+        },
+    });
 
-    for (i, digit) in result_digits.iter().rev().enumerate() {
-        result += digit * i32::pow(10, i as u32);
+    let mut result: usize = 0;
+
+    for (i, digit) in digits.rev().enumerate() {
+        result += digit * usize::pow(10, i as u32);
     }
 
     result as usize
