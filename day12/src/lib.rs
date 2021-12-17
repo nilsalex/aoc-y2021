@@ -1,7 +1,7 @@
 #![feature(test)]
 mod bench;
 
-use std::collections::VecDeque;
+use std::collections::{HashMap, HashSet, VecDeque};
 use std::fs::File;
 use std::io::{self, BufRead};
 use utils::AocSolution;
@@ -24,50 +24,57 @@ impl AocSolution<usize, usize> for Solution {
     }
 }
 
+#[derive(Debug, Clone)]
+struct State {
+    pos: String,
+    small_visited: HashSet<String>,
+    some_small_twice: bool,
+}
+
+fn add_edge(edges: &mut HashMap<String, Vec<String>>, v1: &str, v2: &str) {
+    if let Some(entry) = edges.get_mut(v1) {
+        entry.push(v2.to_owned());
+    } else {
+        edges.insert(v1.to_owned(), vec![v2.to_owned()]);
+    }
+}
+
 fn part1(input_path: &str) -> usize {
     let file = File::open(input_path).unwrap();
     let lines = io::BufReader::new(file).lines().flatten();
 
-    let mut edges: Vec<(String, String)> = vec![];
-    let mut vertices: Vec<String> = vec![];
+    let mut edges: HashMap<String, Vec<String>> = HashMap::new();
 
     lines.for_each(|line| {
         let split = line.split('-').collect::<Vec<&str>>();
-        edges.push((split[0].to_owned(), split[1].to_owned()));
-        edges.push((split[1].to_owned(), split[0].to_owned()));
-        vertices.push(split[0].to_owned());
-        vertices.push(split[1].to_owned());
+        add_edge(&mut edges, split[0], split[1]);
+        add_edge(&mut edges, split[1], split[0]);
     });
 
-    vertices.sort();
-    vertices.dedup();
-
-    edges.sort();
-    edges.dedup();
-
-    let mut queue: VecDeque<Vec<String>> = VecDeque::new();
-    queue.push_back(vec!["start".to_owned()]);
+    let mut queue: VecDeque<State> = VecDeque::new();
+    queue.push_back(State {
+        pos: "start".to_owned(),
+        small_visited: HashSet::from(["start".to_owned()]),
+        some_small_twice: false,
+    });
 
     let mut counter: usize = 0;
     while !queue.is_empty() {
-        let path = queue.pop_front().unwrap();
-        let last: &str = path.last().unwrap();
-        if last == "end" {
+        let state = queue.pop_front().unwrap();
+        if state.pos == "end" {
             counter += 1;
         } else {
-            let next_vertices: Vec<String> = edges
-                .iter()
-                .filter(|v| v.0 == last)
-                .map(|v| v.1.clone())
-                .collect();
+            let next_vertices = edges.get(&state.pos).unwrap();
 
-            for next_vertex in next_vertices {
-                let is_upper: bool = next_vertex.to_ascii_uppercase() == next_vertex;
-                let already_seen: bool = path.contains(&next_vertex);
-                if is_upper || !already_seen {
-                    let mut new_path = path.clone();
-                    new_path.push(next_vertex);
-                    queue.push_back(new_path);
+            for next_vertex in next_vertices.iter() {
+                let is_upper: bool = next_vertex.to_ascii_uppercase() == *next_vertex;
+                if is_upper || !state.small_visited.contains(next_vertex) {
+                    let mut new_state = state.clone();
+                    new_state.pos = next_vertex.to_owned();
+                    if !is_upper {
+                        new_state.small_visited.insert(next_vertex.to_owned());
+                    }
+                    queue.push_back(new_state);
                 }
             }
         }
@@ -80,59 +87,44 @@ fn part2(input_path: &str) -> usize {
     let file = File::open(input_path).unwrap();
     let lines = io::BufReader::new(file).lines().flatten();
 
-    let mut edges: Vec<(String, String)> = vec![];
-    let mut vertices: Vec<String> = vec![];
+    let mut edges: HashMap<String, Vec<String>> = HashMap::new();
 
     lines.for_each(|line| {
         let split = line.split('-').collect::<Vec<&str>>();
-        edges.push((split[0].to_owned(), split[1].to_owned()));
-        edges.push((split[1].to_owned(), split[0].to_owned()));
-        vertices.push(split[0].to_owned());
-        vertices.push(split[1].to_owned());
+        add_edge(&mut edges, split[0], split[1]);
+        add_edge(&mut edges, split[1], split[0]);
     });
 
-    vertices.sort();
-    vertices.dedup();
-
-    edges.sort();
-    edges.dedup();
-
-    let mut queue: VecDeque<Vec<String>> = VecDeque::new();
-    queue.push_back(vec!["start".to_owned()]);
+    let mut queue: VecDeque<State> = VecDeque::new();
+    queue.push_back(State {
+        pos: "start".to_owned(),
+        small_visited: HashSet::from(["start".to_owned()]),
+        some_small_twice: false,
+    });
 
     let mut counter: usize = 0;
     while !queue.is_empty() {
-        let path = queue.pop_front().unwrap();
-        let last: &str = path.last().unwrap();
-        if last == "end" {
+        let state = queue.pop_front().unwrap();
+        if state.pos == "end" {
             counter += 1;
         } else {
-            let next_vertices: Vec<String> = edges
-                .iter()
-                .filter(|v| v.0 == last)
-                .map(|v| v.1.clone())
-                .collect();
+            let next_vertices = edges.get(&state.pos).unwrap();
 
-            for next_vertex in next_vertices {
-                let is_upper: bool = next_vertex.to_ascii_uppercase() == next_vertex;
-                let already_seen: bool = path.contains(&next_vertex);
+            for next_vertex in next_vertices.iter() {
+                let is_upper: bool = next_vertex.to_ascii_uppercase() == *next_vertex;
+                let already_seen: bool = state.small_visited.contains(next_vertex);
                 let is_start: bool = next_vertex == "start";
 
-                let mut smalls: Vec<String> = path
-                    .iter()
-                    .cloned()
-                    .filter(|v| v.to_lowercase() == *v)
-                    .collect();
-                smalls.sort();
-
-                let smalls_count = smalls.len();
-                smalls.dedup();
-                let no_small_seen_twice = smalls_count == smalls.len();
-
-                if is_upper || !already_seen || (no_small_seen_twice && !is_start) {
-                    let mut new_path = path.clone();
-                    new_path.push(next_vertex);
-                    queue.push_back(new_path);
+                if is_upper || !already_seen || !is_start && !state.some_small_twice {
+                    let mut new_state = state.clone();
+                    if !is_upper && already_seen {
+                        new_state.some_small_twice = true;
+                    }
+                    new_state.pos = next_vertex.to_owned();
+                    if !is_upper && !already_seen {
+                        new_state.small_visited.insert(next_vertex.to_owned());
+                    }
+                    queue.push_back(new_state);
                 }
             }
         }
