@@ -1,7 +1,7 @@
 #![feature(test)]
 mod bench;
 
-use std::collections::{HashMap, HashSet, VecDeque};
+use std::collections::{HashMap, HashSet};
 use std::fs::File;
 use std::io::{self, BufRead};
 use utils::AocSolution;
@@ -24,14 +24,85 @@ impl AocSolution<usize, usize> for Solution {
     }
 }
 
-#[derive(Debug, Clone)]
-struct State {
-    pos: String,
-    small_visited: HashSet<String>,
-    some_small_twice: bool,
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
+enum Node {
+    Start,
+    End,
+    Small(u32),
+    Large(u32),
 }
 
-fn add_edge(edges: &mut HashMap<String, Vec<String>>, v1: &str, v2: &str) {
+impl Node {
+    fn is_small(&self) -> bool {
+        matches!(self, Self::Small(_) | Self::Start | Self::End)
+    }
+}
+
+#[derive(Debug, Clone)]
+struct State {
+    small_visited: HashSet<Node>,
+    path: Vec<Node>,
+    number_paths: usize,
+    small_visited_twice: Option<Node>,
+}
+
+impl State {
+    fn small_node_visited(&self, node: &Node) -> bool {
+        self.small_visited.contains(node)
+    }
+}
+
+fn dfs(
+    state: &mut State,
+    graph: &HashMap<Node, Vec<Node>>,
+    node: &Node,
+    final_node: &Node,
+    allow_extra_small: bool,
+) {
+    let is_small: bool = node.is_small();
+
+    if is_small && state.small_node_visited(node) {
+        if allow_extra_small && state.small_visited_twice.is_none() && node != &Node::Start {
+            state.small_visited_twice = Some(*node);
+        } else {
+            return;
+        }
+    }
+
+    if is_small {
+        state.small_visited.insert(*node);
+    }
+
+    state.path.push(*node);
+
+    if node == final_node {
+        state.number_paths += 1;
+        if is_small {
+            if state.small_visited_twice == Some(*node) {
+                state.small_visited_twice = None;
+            } else {
+                state.small_visited.remove(node);
+            }
+        }
+        state.path.pop();
+        return;
+    }
+
+    for next in graph.get(node).unwrap() {
+        dfs(state, graph, next, final_node, allow_extra_small);
+    }
+
+    state.path.pop();
+    if is_small {
+        if state.small_visited_twice == Some(*node) {
+            state.small_visited_twice = None;
+        } else {
+            state.small_visited.remove(node);
+        }
+    }
+}
+
+fn add_edge(edges: &mut HashMap<Node, Vec<Node>>, v1: &Node, v2: &Node) {
     if let Some(entry) = edges.get_mut(v1) {
         entry.push(v2.to_owned());
     } else {
@@ -39,96 +110,69 @@ fn add_edge(edges: &mut HashMap<String, Vec<String>>, v1: &str, v2: &str) {
     }
 }
 
-fn part1(input_path: &str) -> usize {
+fn get_or_add_node(nodes_dict: &mut HashMap<String, Node>, name: &str) -> Node {
+    if let Some(node) = nodes_dict.get(name) {
+        *node
+    } else {
+        let node_number = nodes_dict.len() as u32;
+        let node = if name.to_uppercase() == name {
+            Node::Large(node_number)
+        } else {
+            Node::Small(node_number)
+        };
+        nodes_dict.insert(name.to_owned(), node);
+        node
+    }
+}
+
+fn parse_input(input_path: &str) -> HashMap<Node, Vec<Node>> {
     let file = File::open(input_path).unwrap();
     let lines = io::BufReader::new(file).lines().flatten();
 
-    let mut edges: HashMap<String, Vec<String>> = HashMap::new();
+    let mut nodes_dict: HashMap<String, Node> = HashMap::from([
+        ("start".to_owned(), Node::Start),
+        ("end".to_owned(), Node::End),
+    ]);
+
+    let mut edges: HashMap<Node, Vec<Node>> = HashMap::new();
 
     lines.for_each(|line| {
         let split = line.split('-').collect::<Vec<&str>>();
-        add_edge(&mut edges, split[0], split[1]);
-        add_edge(&mut edges, split[1], split[0]);
+        let node1 = get_or_add_node(&mut nodes_dict, split[0]);
+        let node2 = get_or_add_node(&mut nodes_dict, split[1]);
+        add_edge(&mut edges, &node1, &node2);
+        add_edge(&mut edges, &node2, &node1);
     });
 
-    let mut queue: VecDeque<State> = VecDeque::new();
-    queue.push_back(State {
-        pos: "start".to_owned(),
-        small_visited: HashSet::from(["start".to_owned()]),
-        some_small_twice: false,
-    });
+    edges
+}
 
-    let mut counter: usize = 0;
-    while !queue.is_empty() {
-        let state = queue.pop_front().unwrap();
-        if state.pos == "end" {
-            counter += 1;
-        } else {
-            let next_vertices = edges.get(&state.pos).unwrap();
+fn part1(input_path: &str) -> usize {
+    let graph = parse_input(input_path);
 
-            for next_vertex in next_vertices.iter() {
-                let is_upper: bool = next_vertex.to_ascii_uppercase() == *next_vertex;
-                if is_upper || !state.small_visited.contains(next_vertex) {
-                    let mut new_state = state.clone();
-                    new_state.pos = next_vertex.to_owned();
-                    if !is_upper {
-                        new_state.small_visited.insert(next_vertex.to_owned());
-                    }
-                    queue.push_back(new_state);
-                }
-            }
-        }
-    }
+    let mut state = State {
+        small_visited: HashSet::new(),
+        path: vec![],
+        number_paths: 0,
+        small_visited_twice: None,
+    };
 
-    counter
+    dfs(&mut state, &graph, &Node::Start, &Node::End, false);
+
+    state.number_paths
 }
 
 fn part2(input_path: &str) -> usize {
-    let file = File::open(input_path).unwrap();
-    let lines = io::BufReader::new(file).lines().flatten();
+    let graph = parse_input(input_path);
 
-    let mut edges: HashMap<String, Vec<String>> = HashMap::new();
+    let mut state = State {
+        small_visited: HashSet::new(),
+        path: vec![],
+        number_paths: 0,
+        small_visited_twice: None,
+    };
 
-    lines.for_each(|line| {
-        let split = line.split('-').collect::<Vec<&str>>();
-        add_edge(&mut edges, split[0], split[1]);
-        add_edge(&mut edges, split[1], split[0]);
-    });
+    dfs(&mut state, &graph, &Node::Start, &Node::End, true);
 
-    let mut queue: VecDeque<State> = VecDeque::new();
-    queue.push_back(State {
-        pos: "start".to_owned(),
-        small_visited: HashSet::from(["start".to_owned()]),
-        some_small_twice: false,
-    });
-
-    let mut counter: usize = 0;
-    while !queue.is_empty() {
-        let state = queue.pop_front().unwrap();
-        if state.pos == "end" {
-            counter += 1;
-        } else {
-            let next_vertices = edges.get(&state.pos).unwrap();
-
-            for next_vertex in next_vertices.iter() {
-                let is_upper: bool = next_vertex.to_ascii_uppercase() == *next_vertex;
-                let already_seen: bool = state.small_visited.contains(next_vertex);
-                let is_start: bool = next_vertex == "start";
-
-                if is_upper || !already_seen || !is_start && !state.some_small_twice {
-                    let mut new_state = state.clone();
-                    if !is_upper && already_seen {
-                        new_state.some_small_twice = true;
-                    }
-                    new_state.pos = next_vertex.to_owned();
-                    if !is_upper && !already_seen {
-                        new_state.small_visited.insert(next_vertex.to_owned());
-                    }
-                    queue.push_back(new_state);
-                }
-            }
-        }
-    }
-
-    counter
+    state.number_paths
 }
