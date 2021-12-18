@@ -31,15 +31,15 @@ struct State {
     position: (usize, usize),
 }
 
-fn parse_input(input_path: &str) -> Vec<Vec<u32>> {
+fn parse_input(input_path: &str) -> Vec<Vec<u8>> {
     let file = File::open(input_path).unwrap();
     let lines = io::BufReader::new(file).lines().flatten();
 
     lines
         .map(|line| {
             line.chars()
-                .map(|c| c.to_digit(10).unwrap())
-                .collect::<Vec<u32>>()
+                .map(|c| c.to_digit(10).unwrap() as u8)
+                .collect::<Vec<u8>>()
         })
         .collect()
 }
@@ -81,7 +81,7 @@ fn part1(input_path: &str) -> u32 {
 
         for position_ in next_positions(position, xdim, ydim) {
             let next = State {
-                risk: risk + grid[position_.1][position_.0],
+                risk: risk + grid[position_.1][position_.0] as u32,
                 position: position_,
             };
 
@@ -108,8 +108,8 @@ fn next_positions(position: (usize, usize), xdim: usize, ydim: usize) -> Vec<(us
         .collect()
 }
 
-fn get_risk(grid: &[Vec<u32>], xdim: usize, ydim: usize, x: usize, y: usize) -> u32 {
-    (((grid[y % ydim][x % xdim] + (y / ydim) as u32 + (x / xdim) as u32) - 1) % 9) + 1
+fn get_risk(grid: &[Vec<u8>], xdim: usize, ydim: usize, x: usize, y: usize) -> u8 {
+    (((grid[y % ydim][x % xdim] + (y / ydim) as u8 + (x / xdim) as u8) - 1) % 9) + 1
 }
 
 fn part2(input_path: &str) -> u32 {
@@ -143,7 +143,7 @@ fn part2(input_path: &str) -> u32 {
 
         for position_ in next_positions(position, 5 * xdim, 5 * ydim) {
             let next = State {
-                risk: risk + get_risk(&grid, xdim, ydim, position_.0, position_.1),
+                risk: risk + get_risk(&grid, xdim, ydim, position_.0, position_.1) as u32,
                 position: position_,
             };
 
