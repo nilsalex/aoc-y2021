@@ -34,4 +34,5 @@ fn main() {
     print_solution(day15::Solution::with_input_path("day15/input.txt"), 15);
     print_solution(day16::Solution::with_input_path("day16/input.txt"), 16);
     print_solution(day17::Solution::with_input_path("day17/input.txt"), 17);
+    print_solution(day18::Solution::with_input_path("day18/input.txt"), 18);
 }
