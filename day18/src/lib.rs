@@ -75,7 +75,7 @@ fn reduce(str: &[i32]) -> Result<Vec<i32>> {
     if let Some(i) = explode_number_index {
         let mut result: Vec<i32> = Vec::from(&str[0..i]);
         result.push(0);
-        result.append(&mut Vec::from(&str[i + 5..]));
+        result.extend(&str[i + 5..]);
 
         if let Some(l) = left_number_index {
             result[l] = str[l] + str[i + 1];
@@ -101,7 +101,7 @@ fn reduce(str: &[i32]) -> Result<Vec<i32>> {
         result.push(-3);
         result.push(new_c_2);
         result.push(-2);
-        result.append(&mut Vec::from(&str[i + 1..]));
+        result.extend(&str[i + 1..]);
 
         return Result::Split(result);
     }
@@ -111,9 +111,9 @@ fn reduce(str: &[i32]) -> Result<Vec<i32>> {
 
 fn add(number_1: &[i32], number_2: &[i32]) -> Vec<i32> {
     let mut result = vec![-1];
-    result.append(&mut Vec::from(number_1));
+    result.extend(number_1);
     result.push(-3);
-    result.append(&mut Vec::from(number_2));
+    result.extend(number_2);
     result.push(-2);
 
     result
@@ -171,14 +171,14 @@ fn part1(input_path: &str) -> i32 {
     let lines = io::BufReader::new(file).lines().flatten();
     let numbers_vec: Vec<Vec<i32>> = lines.map(|str| map_input(&str)).collect();
 
-    let final_numbers = numbers_vec
+    let final_numbers = &numbers_vec
         .iter()
         .skip(1)
         .fold(numbers_vec[0].clone(), |acc, numbers| {
             reduce_repeat(&add(&acc, numbers))
         });
 
-    magnitude(&final_numbers)
+    magnitude(final_numbers)
 }
 
 fn part2(input_path: &str) -> i32 {
