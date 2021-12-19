@@ -2,6 +2,11 @@ use std::collections::{HashMap, HashSet};
 use std::fs::File;
 use std::io::{self, BufRead};
 
+struct Result {
+    scanners: Vec<(i32, i32, i32)>,
+    beacons: HashSet<(i32, i32, i32)>,
+}
+
 fn rotate_x(pos: &mut (i32, i32, i32)) {
     *pos = (pos.0, pos.2, -pos.1)
 }
@@ -75,6 +80,35 @@ fn transform_to(
     None
 }
 
+fn transform_maps(maps: &[Vec<(i32, i32, i32)>]) -> Result {
+    let mut beacons = HashSet::from_iter(maps[0].clone());
+    let mut scanners = vec![(0, 0, 0)];
+    let mut to_check: Vec<Vec<(i32, i32, i32)>> = vec![maps[0].clone()];
+    let mut remaining: Vec<usize> = Vec::from_iter(1..maps.len());
+
+    while !remaining.is_empty() {
+        let mut new_remaining: Vec<usize> = vec![];
+        let mut new_to_check: Vec<Vec<(i32, i32, i32)>> = vec![];
+
+        'outer: for i in remaining.clone() {
+            for j in to_check.iter() {
+                if let Some((diff, points)) = transform_to(j, &maps[i]) {
+                    new_to_check.push(points.clone());
+                    beacons.extend(points.iter());
+                    scanners.push(diff);
+                    continue 'outer;
+                }
+            }
+            new_remaining.push(i);
+        }
+
+        to_check = new_to_check;
+        remaining = new_remaining;
+    }
+
+    Result { scanners, beacons }
+}
+
 fn part1() -> usize {
     let file = File::open("day19/input.txt").unwrap();
     let lines = io::BufReader::new(file).lines().flatten();
@@ -107,36 +141,7 @@ fn part1() -> usize {
 
     maps.push(cur_map.clone());
 
-    let mut result_maps: Vec<Vec<(i32, i32, i32)>> = vec![maps[0].clone()];
-    let mut remaining_maps: Vec<Vec<(i32, i32, i32)>> = maps.iter().skip(1).cloned().collect();
-
-    while !remaining_maps.is_empty() {
-        let mut new_result_maps: Vec<Vec<(i32, i32, i32)>> = vec![];
-        let mut new_remaining_maps: Vec<Vec<(i32, i32, i32)>> = vec![];
-
-        'outer: for map2 in remaining_maps.iter() {
-            for map1 in result_maps.iter() {
-                if let Some((_, map2_)) = transform_to(map1, map2) {
-                    new_result_maps.push(map2_);
-                    continue 'outer;
-                }
-            }
-            new_remaining_maps.push(map2.clone());
-        }
-
-        result_maps.append(&mut new_result_maps);
-        remaining_maps = new_remaining_maps;
-    }
-
-    let mut result_set: HashSet<(i32, i32, i32)> = HashSet::new();
-
-    for map in result_maps.iter() {
-        for pos in map.iter() {
-            result_set.insert(*pos);
-        }
-    }
-
-    result_set.len()
+    transform_maps(&maps).beacons.len()
 }
 
 fn part2() -> usize {
@@ -171,36 +176,18 @@ fn part2() -> usize {
 
     maps.push(cur_map.clone());
 
-    let mut result_maps: Vec<Vec<(i32, i32, i32)>> = vec![maps[0].clone()];
-    let mut remaining_maps: Vec<Vec<(i32, i32, i32)>> = maps.iter().skip(1).cloned().collect();
-    let mut diffs: Vec<(i32, i32, i32)> = vec![(0, 0, 0)];
-
-    while !remaining_maps.is_empty() {
-        let mut new_result_maps: Vec<Vec<(i32, i32, i32)>> = vec![];
-        let mut new_remaining_maps: Vec<Vec<(i32, i32, i32)>> = vec![];
-
-        'outer: for map2 in remaining_maps.iter() {
-            for map1 in result_maps.iter() {
-                if let Some((diff, map2_)) = transform_to(map1, map2) {
-                    new_result_maps.push(map2_);
-                    diffs.push(diff);
-                    continue 'outer;
-                }
-            }
-            new_remaining_maps.push(map2.clone());
-        }
-
-        result_maps.append(&mut new_result_maps);
-        remaining_maps = new_remaining_maps;
-    }
+    let Result {
+        scanners,
+        beacons: _,
+    } = transform_maps(&maps);
 
     let mut max_diff: usize = 0;
 
-    for (dx1, dy1, dz1) in diffs.iter() {
-        for (dx2, dy2, dz2) in diffs.iter() {
+    for (x1, y1, z1) in scanners.iter() {
+        for (x2, y2, z2) in scanners.iter() {
             max_diff = std::cmp::max(
                 max_diff,
-                ((dx1 - dx2).abs() + (dy1 - dy2).abs() + (dz1 - dz2).abs()) as usize,
+                ((x1 - x2).abs() + (y1 - y2).abs() + (z1 - z2).abs()) as usize,
             );
         }
     }
