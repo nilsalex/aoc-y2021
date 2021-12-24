@@ -72,36 +72,6 @@ fn quantum(
         .fold((0, 0), |(acc1, acc2), (c1, c2)| (acc1 + c1, acc2 + c2))
 }
 
-fn simulate(p1_start: usize, p2_start: usize, target: usize, dice: &[usize]) -> Option<Player> {
-    let mut p1 = p1_start;
-    let mut p2 = p2_start;
-
-    let mut p1_score: usize = 0;
-    let mut p2_score: usize = 0;
-
-    let mut rolls: usize = 0;
-
-    loop {
-        p1 = weird_mod(p1 + dice[rolls], 10);
-        rolls += 1;
-
-        p1_score += p1;
-
-        if p1_score >= target {
-            return Some(Player::One);
-        }
-
-        p2 = weird_mod(p2 + dice[rolls], 10);
-        rolls += 1;
-
-        p2_score += p2;
-
-        if p2_score >= target {
-            return Some(Player::Two);
-        }
-    }
-}
-
 fn part1() -> usize {
     let mut p1: usize = 2;
     let mut p2: usize = 1;

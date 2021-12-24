@@ -47,7 +47,7 @@ impl Amphi {
         }
     }
 
-    fn next(&self, amphis: &Vec<Self>) -> Vec<(Self, usize)> {
+    fn next(&self, amphis: &[Self]) -> Vec<(Self, usize)> {
         match self.state {
             AmphiState::Final => vec![],
             AmphiState::Initial => [
@@ -83,7 +83,7 @@ impl Amphi {
                         e,
                     )]
                 })
-                .unwrap_or(vec![]),
+                .unwrap_or_default(),
         }
     }
 }
@@ -91,7 +91,7 @@ impl Amphi {
 fn trace_to_parking_pos(
     amphi: &Amphi,
     end: &(u8, u8),
-    amphis: &Amphis,
+    amphis: &[Amphi],
 ) -> Option<((u8, u8), usize)> {
     for i in amphi.pos.1 + 1..=end.1 {
         if amphis
@@ -129,25 +129,8 @@ fn trace_to_parking_pos(
     ))
 }
 
-fn trace_to_well(amphi: &Amphi, end: &(u8, u8), amphis: &Amphis) -> Option<((u8, u8), usize)> {
-    let trace: bool = amphi.amphi_type == AmphiType::C
-        && amphi.pos == (5, 2)
-        && amphi.state == AmphiState::Parked
-        && *end == (6, 0)
-        && false;
-
-    if trace {
-        println!(
-            "tracing amphi to final. Amphi:\n{:?}\n\nAmphis:\n{}\n\n",
-            amphi,
-            amphis_to_string(&amphis)
-        );
-    }
-
+fn trace_to_well(amphi: &Amphi, end: &(u8, u8), amphis: &[Amphi]) -> Option<((u8, u8), usize)> {
     if end.0 > amphi.pos.0 {
-        if trace {
-            println!("first branch in horizontal traversal!");
-        }
         for i in amphi.pos.0 + 1..=end.0 {
             if amphis
                 .iter()
@@ -157,9 +140,6 @@ fn trace_to_well(amphi: &Amphi, end: &(u8, u8), amphis: &Amphis) -> Option<((u8,
             }
         }
     } else {
-        if trace {
-            println!("second branch in horizontal traversal!");
-        }
         for i in (end.0..=amphi.pos.0 - 1).rev() {
             if amphis
                 .iter()
@@ -168,10 +148,6 @@ fn trace_to_well(amphi: &Amphi, end: &(u8, u8), amphis: &Amphis) -> Option<((u8,
                 return None;
             }
         }
-    }
-
-    if trace {
-        println!("passed horizontal traversal!");
     }
 
     for i in (end.1..=amphi.pos.1 - 1).rev() {
@@ -183,26 +159,17 @@ fn trace_to_well(amphi: &Amphi, end: &(u8, u8), amphis: &Amphis) -> Option<((u8,
                 AmphiState::Initial => return None,
                 AmphiState::Parked => unreachable!(),
                 AmphiState::Final => {
-                    if trace {
-                        println!(
-                            "passed vertical traversal. Descending to {:?}",
-                            (end.0, i + 1)
-                        )
-                    }
                     return Some((
                         (end.0, i + 1),
                         amphi.amphi_type.energy()
                             * (end.0.abs_diff(amphi.pos.0) + (i + 1).abs_diff(amphi.pos.1))
                                 as usize,
-                    ));
+                    ))
                 }
             }
         }
     }
 
-    if trace {
-        println!("passed vertical traversal. Descending to {:?}", *end)
-    }
     Some((
         *end,
         amphi.amphi_type.energy()
@@ -219,14 +186,6 @@ enum AmphiType {
 }
 
 impl AmphiType {
-    fn char(&self) -> char {
-        match self {
-            AmphiType::A => 'A',
-            AmphiType::B => 'B',
-            AmphiType::C => 'C',
-            AmphiType::D => 'D',
-        }
-    }
     fn target_col(&self) -> u8 {
         match self {
             AmphiType::A => 2,
@@ -260,36 +219,11 @@ struct State {
     amphis: Amphis,
 }
 
-fn amphis_to_string(amphis: &Amphis) -> String {
-    let mut chars: Vec<char> = vec![
-        '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '\n', '#', '.', '.', '.',
-        '.', '.', '.', '.', '.', '.', '.', '.', '#', '\n', '#', '#', '#', '.', '#', '.', '#', '.',
-        '#', '.', '#', '#', '#', '\n',
-    ];
-
-    for _ in 0..DEPTH - 1 {
-        chars.extend([
-            ' ', ' ', '#', '.', '#', '.', '#', '.', '#', '.', '#', ' ', ' ', '\n',
-        ]);
-    }
-
-    chars.extend([
-        ' ', ' ', '#', '#', '#', '#', '#', '#', '#', '#', '#', ' ', ' ', '\n',
-    ]);
-
-    for amphi in amphis.iter() {
-        chars[15 + 14 * (DEPTH - amphi.pos.1) as usize + amphi.pos.0 as usize] =
-            amphi.amphi_type.char();
-    }
-
-    String::from_iter(chars.iter())
-}
-
-fn get_next_amphis(amphis: &Amphis) -> Vec<(Amphis, usize)> {
+fn get_next_amphis(amphis: &[Amphi]) -> Vec<(Amphis, usize)> {
     let mut next_amphis = vec![];
 
     for (i, amphi) in amphis.iter().enumerate() {
-        let next_for_this_amphi = amphi.next(&amphis);
+        let next_for_this_amphi = amphi.next(amphis);
         // println!(
         //     "next for amphi\n{:?}\n\n{:?}\n\n{}\n\n----------------------\n",
         //     amphi,
@@ -300,7 +234,7 @@ fn get_next_amphis(amphis: &Amphis) -> Vec<(Amphis, usize)> {
             &mut next_for_this_amphi
                 .iter()
                 .map(|(a, e)| {
-                    let mut cloned = amphis.clone();
+                    let mut cloned = amphis.to_vec();
                     cloned[i] = *a;
                     cloned.sort();
                     (cloned, *e)
@@ -427,7 +361,7 @@ fn part1() -> usize {
 
             if next.energy < *dist.get(&next.amphis).unwrap_or(&usize::MAX) {
                 heap.push(Reverse(next.clone()));
-                dist.insert((&next).amphis.clone(), (&next).energy);
+                dist.insert(next.amphis.clone(), next.energy);
             }
         }
     }
