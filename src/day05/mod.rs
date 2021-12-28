@@ -1,29 +1,7 @@
-#![feature(test)]
-mod bench;
-
 use rustc_hash::FxHashSet;
-use std::fs::File;
-use std::io::{self, BufRead};
 use std::num::ParseIntError;
-use utils::AocSolution;
 
-pub struct Solution {
-    input_path: String,
-}
-
-impl AocSolution<usize, usize> for Solution {
-    fn part1(&self) -> usize {
-        part1(&self.input_path)
-    }
-    fn part2(&self) -> usize {
-        part2(&self.input_path)
-    }
-    fn with_input_path(input_path: &str) -> Self {
-        Solution {
-            input_path: input_path.to_owned(),
-        }
-    }
-}
+pub const INPUT: &str = include_str!("input.txt");
 
 #[derive(Debug)]
 enum Error {
@@ -31,8 +9,8 @@ enum Error {
     IOError,
 }
 
-impl From<io::Error> for Error {
-    fn from(_: io::Error) -> Self {
+impl From<std::io::Error> for Error {
+    fn from(_: std::io::Error) -> Self {
         Error::IOError
     }
 }
@@ -60,18 +38,18 @@ impl Line {
         let dy_ = self.end_y - self.start_y;
 
         if dx_ == 0 {
-            (0, num::signum(dy_), num::abs(dy_))
+            (0, dy_.signum(), dy_.abs())
         } else if dy_ == 0 {
-            (num::signum(dx_), 0, num::abs(dx_))
+            (dx_.signum(), 0, dx_.abs())
         } else {
-            let gcd = num::integer::gcd(num::abs(dx_), num::abs(dy_));
+            let gcd = num::integer::gcd(dx_.abs(), dy_.abs());
             (dx_ / gcd, dy_ / gcd, gcd)
         }
     }
 }
 
-fn part1(input_path: &str) -> usize {
-    let lines: Vec<Line> = parse_input(input_path).unwrap();
+pub fn part1(s: &str) -> usize {
+    let lines: Vec<Line> = parse_input(s).unwrap();
     let non_diagonal: Vec<&Line> = lines.iter().filter(|l| l.is_non_diagonal()).collect();
 
     let mut points_once: FxHashSet<(i32, i32)> = FxHashSet::default();
@@ -92,7 +70,7 @@ fn part1(input_path: &str) -> usize {
     points_twice.len()
 }
 
-fn part2(input_path: &str) -> usize {
+pub fn part2(input_path: &str) -> usize {
     let lines: Vec<Line> = parse_input(input_path).unwrap();
     let mut points_once: FxHashSet<(i32, i32)> = FxHashSet::default();
     let mut points_twice: FxHashSet<(i32, i32)> = FxHashSet::default();
@@ -112,10 +90,8 @@ fn part2(input_path: &str) -> usize {
     points_twice.len()
 }
 
-fn parse_input(filename: &str) -> Result<Vec<Line>, Error> {
-    let file = File::open(filename)?;
-    let input_lines = io::BufReader::new(file).lines();
-    input_lines.map(|s| parse_line(&s?)).collect()
+fn parse_input(s: &str) -> Result<Vec<Line>, Error> {
+    s.lines().map(parse_line).collect()
 }
 
 fn parse_line(input_line: &str) -> Result<Line, Error> {
@@ -135,4 +111,29 @@ fn parse_line(input_line: &str) -> Result<Line, Error> {
         end_x: end[0],
         end_y: end[1],
     })
+}
+
+extern crate test;
+
+#[cfg(test)]
+use test::Bencher;
+
+#[test]
+fn test_day05_part1() {
+    assert_eq!(part1(INPUT), 5632);
+}
+
+#[test]
+fn test_day05_part2() {
+    assert_eq!(part2(INPUT), 22213);
+}
+
+#[bench]
+fn bench_day05_part1(b: &mut Bencher) {
+    b.iter(|| part1(INPUT))
+}
+
+#[bench]
+fn bench_day05_part2(b: &mut Bencher) {
+    b.iter(|| part2(INPUT))
 }

@@ -14,3 +14,7 @@ doctest = false
 name = "runner"
 path = "src/runner.rs"
 test = false
+
+[dependencies]
+num = "0.4.0"
+rustc-hash = "1.1.0"
