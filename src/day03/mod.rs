@@ -1,51 +1,26 @@
-#![feature(test)]
-mod bench;
-
-use std::fs::File;
-use std::io::{self, BufRead};
-use utils::AocSolution;
-
-pub struct Solution {
-    input_path: String,
-}
-
-impl AocSolution<i32, i32> for Solution {
-    fn part1(&self) -> i32 {
-        part1(&self.input_path)
-    }
-    fn part2(&self) -> i32 {
-        part2(&self.input_path)
-    }
-    fn with_input_path(input_path: &str) -> Self {
-        Solution {
-            input_path: input_path.to_owned(),
-        }
-    }
-}
+pub const INPUT: &str = include_str!("input.txt");
 
 enum FilterMode {
     MostCommon,
     LeastCommon,
 }
 
-pub fn part1(input_path: &str) -> i32 {
+pub fn part1(s: &str) -> usize {
     const NUM_BITS: usize = 12;
     let mut bits: [i32; NUM_BITS] = [0; NUM_BITS];
     let mut count: i32 = 0;
 
-    if let Ok(file) = File::open(input_path) {
-        for line in io::BufReader::new(file).lines().flatten() {
-            count += 1;
-            for (i, c) in line.chars().enumerate() {
-                if c == '1' {
-                    bits[i] += 1
-                }
+    for line in s.lines() {
+        count += 1;
+        for (i, c) in line.chars().enumerate() {
+            if c == '1' {
+                bits[i] += 1
             }
         }
     }
 
-    let mut a: i32 = 0;
-    let mut b: i32 = 0;
+    let mut a: usize = 0;
+    let mut b: usize = 0;
 
     for (i, bit) in bits.iter().enumerate() {
         let x = 1 << (NUM_BITS - i - 1);
@@ -59,26 +34,24 @@ pub fn part1(input_path: &str) -> i32 {
     a * b
 }
 
-pub fn part2(input_path: &str) -> i32 {
+pub fn part2(s: &str) -> usize {
     const NUM_BITS: usize = 12;
 
     let mut numbers: Vec<Vec<i32>> = vec![];
 
-    if let Ok(file) = File::open(input_path) {
-        for line in io::BufReader::new(file).lines().flatten() {
-            let mut number: Vec<i32> = vec![];
-            number.reserve(NUM_BITS);
-            for c in line.chars() {
-                match c {
-                    '0' => number.push(0),
-                    '1' => number.push(1),
-                    _ => {
-                        panic!()
-                    }
+    for line in s.lines() {
+        let mut number: Vec<i32> = vec![];
+        number.reserve(NUM_BITS);
+        for c in line.chars() {
+            match c {
+                '0' => number.push(0),
+                '1' => number.push(1),
+                _ => {
+                    panic!()
                 }
             }
-            numbers.push(number)
         }
+        numbers.push(number)
     }
 
     let a = filter(numbers.to_vec(), 0, FilterMode::MostCommon);
@@ -133,7 +106,7 @@ fn filter(numbers: Vec<Vec<i32>>, bit: usize, filter_mode: FilterMode) -> Vec<i3
     }
 }
 
-fn to_int(number: Vec<i32>, num_bits: usize) -> i32 {
+fn to_int(number: Vec<i32>, num_bits: usize) -> usize {
     let mut result = 0;
     for (i, bit) in number.iter().enumerate() {
         let x = 1 << (num_bits - i - 1);
@@ -142,4 +115,29 @@ fn to_int(number: Vec<i32>, num_bits: usize) -> i32 {
         }
     }
     result
+}
+
+extern crate test;
+
+#[cfg(test)]
+use test::Bencher;
+
+#[test]
+fn test_day03_part1() {
+    assert_eq!(part1(INPUT), 3912944);
+}
+
+#[test]
+fn test_day03_part2() {
+    assert_eq!(part2(INPUT), 4996233);
+}
+
+#[bench]
+fn bench_day03_part1(b: &mut Bencher) {
+    b.iter(|| part1(INPUT))
+}
+
+#[bench]
+fn bench_day03_part2(b: &mut Bencher) {
+    b.iter(|| part2(INPUT))
 }

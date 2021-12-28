@@ -1,6 +1,4 @@
-pub fn input() -> &'static str {
-    include_str!("input.txt")
-}
+pub const INPUT: &str = include_str!("input.txt");
 
 pub fn part1(s: &str) -> usize {
     let mut horizontal: usize = 0;
@@ -51,20 +49,20 @@ use test::Bencher;
 
 #[test]
 fn test_day02_part1() {
-    assert_eq!(part1(input()), 1660158);
+    assert_eq!(part1(INPUT), 1660158);
 }
 
 #[test]
 fn test_day02_part2() {
-    assert_eq!(part2(input()), 1604592846);
+    assert_eq!(part2(INPUT), 1604592846);
 }
 
 #[bench]
 fn bench_day02_part1(b: &mut Bencher) {
-    b.iter(|| part1(input()))
+    b.iter(|| part1(INPUT))
 }
 
 #[bench]
 fn bench_day02_part2(b: &mut Bencher) {
-    b.iter(|| part2(input()))
+    b.iter(|| part2(INPUT))
 }
