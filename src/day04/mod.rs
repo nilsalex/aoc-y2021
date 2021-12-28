@@ -1,29 +1,7 @@
-#![feature(test)]
-mod bench;
-
 use std::collections::HashSet;
-use std::fs::File;
-use std::io::{self, BufRead};
 use std::num::ParseIntError;
-use utils::AocSolution;
 
-pub struct Solution {
-    input_path: String,
-}
-
-impl AocSolution<i32, i32> for Solution {
-    fn part1(&self) -> i32 {
-        part1(&self.input_path).unwrap()
-    }
-    fn part2(&self) -> i32 {
-        part2(&self.input_path).unwrap()
-    }
-    fn with_input_path(input_path: &str) -> Self {
-        Solution {
-            input_path: input_path.to_owned(),
-        }
-    }
-}
+pub const INPUT: &str = include_str!("input.txt");
 
 #[derive(Debug)]
 pub enum Error {
@@ -34,8 +12,8 @@ pub enum Error {
     NotAllGridsWin,
 }
 
-impl From<io::Error> for Error {
-    fn from(_: io::Error) -> Self {
+impl From<std::io::Error> for Error {
+    fn from(_: std::io::Error) -> Self {
         Error::IO
     }
 }
@@ -47,13 +25,13 @@ impl From<std::num::ParseIntError> for Error {
 }
 
 struct Game {
-    numbers: Vec<i32>,
-    grids: Vec<Vec<(i32, bool)>>,
+    numbers: Vec<usize>,
+    grids: Vec<Vec<(usize, bool)>>,
 }
 
-fn part1(input_path: &str) -> Result<i32, Error> {
+pub fn part1(s: &str) -> Result<usize, Error> {
     const GRID_SIZE: usize = 5;
-    let mut game = parse_input(input_path)?;
+    let mut game = parse_input(s)?;
 
     for number in &game.numbers {
         for grid in game.grids.iter_mut() {
@@ -68,7 +46,7 @@ fn part1(input_path: &str) -> Result<i32, Error> {
     Err(Error::NoWinner)
 }
 
-fn part2(input_path: &str) -> Result<i32, Error> {
+pub fn part2(input_path: &str) -> Result<usize, Error> {
     const GRID_SIZE: usize = 5;
     let mut game = parse_input(input_path)?;
     let grid_count = game.grids.len();
@@ -91,11 +69,11 @@ fn part2(input_path: &str) -> Result<i32, Error> {
     Err(Error::NotAllGridsWin)
 }
 
-fn score(grid: &[(i32, bool)]) -> i32 {
+fn score(grid: &[(usize, bool)]) -> usize {
     grid.iter().filter(|x| !x.1).map(|x| x.0).sum()
 }
 
-fn won(grid: &[(i32, bool)], grid_size: usize) -> bool {
+fn won(grid: &[(usize, bool)], grid_size: usize) -> bool {
     for i in 0..grid_size {
         let mut row_complete: bool = true;
         let mut col_complete: bool = true;
@@ -115,7 +93,7 @@ fn won(grid: &[(i32, bool)], grid_size: usize) -> bool {
     false
 }
 
-fn mark_grid(grid: &mut Vec<(i32, bool)>, number: &i32) {
+fn mark_grid(grid: &mut Vec<(usize, bool)>, number: &usize) {
     grid.iter_mut().for_each(|(i, flag)| {
         if *i == *number {
             *flag = true;
@@ -123,42 +101,64 @@ fn mark_grid(grid: &mut Vec<(i32, bool)>, number: &i32) {
     })
 }
 
-fn parse_numbers(line: &str) -> Result<Vec<i32>, ParseIntError> {
+fn parse_numbers(line: &str) -> Result<Vec<usize>, ParseIntError> {
     line.split(',').map(|s| s.parse()).collect()
 }
 
-fn parse_grids(
-    lines: &mut io::Lines<io::BufReader<File>>,
-) -> Result<Vec<Vec<(i32, bool)>>, ParseIntError> {
-    let mut grids: Vec<Vec<(i32, bool)>> = vec![];
+fn parse_grids(lines: &mut core::str::Lines) -> Result<Vec<Vec<(usize, bool)>>, ParseIntError> {
+    let mut grids: Vec<Vec<(usize, bool)>> = vec![];
 
-    let mut grid: Vec<(i32, bool)> = vec![];
-    for line in lines.flatten() {
+    let mut grid: Vec<(usize, bool)> = vec![];
+    for line in lines {
         if line.is_empty() {
             grids.push(grid);
             grid = vec![]
         } else {
-            grid.append(&mut parse_grid_line(&line)?)
+            grid.append(&mut parse_grid_line(line)?)
         }
     }
     grids.push(grid);
     Ok(grids)
 }
 
-fn parse_grid_line(line: &str) -> Result<Vec<(i32, bool)>, ParseIntError> {
+fn parse_grid_line(line: &str) -> Result<Vec<(usize, bool)>, ParseIntError> {
     line.split_whitespace()
         .map(|s| s.parse().map(|parsed| (parsed, false)))
         .collect()
 }
 
-fn parse_input(filename: &str) -> Result<Game, Error> {
-    let file = File::open(filename)?;
-    let mut lines = io::BufReader::new(file).lines();
+fn parse_input(s: &str) -> Result<Game, Error> {
+    let mut lines = s.lines();
 
-    let numbers = parse_numbers(&lines.next().ok_or(Error::ParseFile)??)?;
+    let numbers = parse_numbers(lines.next().ok_or(Error::ParseFile)?)?;
     lines.next();
 
     let grids = parse_grids(&mut lines)?;
 
     Ok(Game { numbers, grids })
+}
+
+extern crate test;
+
+#[cfg(test)]
+use test::Bencher;
+
+#[test]
+fn test_day04_part1() {
+    assert_eq!(part1(INPUT).unwrap(), 34506);
+}
+
+#[test]
+fn test_day04_part2() {
+    assert_eq!(part2(INPUT).unwrap(), 7686);
+}
+
+#[bench]
+fn bench_day04_part1(b: &mut Bencher) {
+    b.iter(|| part1(INPUT).unwrap())
+}
+
+#[bench]
+fn bench_day04_part2(b: &mut Bencher) {
+    b.iter(|| part2(INPUT).unwrap())
 }
