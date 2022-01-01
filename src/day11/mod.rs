@@ -1,36 +1,12 @@
-#![feature(test)]
-mod bench;
-
 use std::collections::{HashSet, VecDeque};
-use std::fs::File;
-use std::io::{self, BufRead};
-use utils::AocSolution;
 
-pub struct Solution {
-    input_path: String,
-}
+pub const INPUT: &str = include_str!("input.txt");
 
-impl AocSolution<usize, usize> for Solution {
-    fn part1(&self) -> usize {
-        part1(&self.input_path)
-    }
-    fn part2(&self) -> usize {
-        part2(&self.input_path)
-    }
-    fn with_input_path(input_path: &str) -> Self {
-        Solution {
-            input_path: input_path.to_owned(),
-        }
-    }
-}
-
-fn part1(input_path: &str) -> usize {
-    let file = File::open(input_path).unwrap();
-    let mut grid: Vec<Vec<usize>> = io::BufReader::new(file)
+pub fn part1(s: &str) -> usize {
+    let mut grid: Vec<Vec<usize>> = s
         .lines()
         .map(|line| {
-            line.unwrap()
-                .chars()
+            line.chars()
                 .map(|c| c.to_digit(10).unwrap() as usize)
                 .collect::<Vec<usize>>()
         })
@@ -93,13 +69,11 @@ fn part1(input_path: &str) -> usize {
     flash_counter
 }
 
-fn part2(input_path: &str) -> usize {
-    let file = File::open(input_path).unwrap();
-    let mut grid: Vec<Vec<usize>> = io::BufReader::new(file)
+pub fn part2(s: &str) -> usize {
+    let mut grid: Vec<Vec<usize>> = s
         .lines()
         .map(|line| {
-            line.unwrap()
-                .chars()
+            line.chars()
                 .map(|c| c.to_digit(10).unwrap() as usize)
                 .collect::<Vec<usize>>()
         })
@@ -161,4 +135,29 @@ fn part2(input_path: &str) -> usize {
             return iteration;
         }
     }
+}
+
+extern crate test;
+
+#[cfg(test)]
+use test::Bencher;
+
+#[test]
+fn test_day11_part1() {
+    assert_eq!(part1(INPUT), 1655);
+}
+
+#[test]
+fn test_day11_part2() {
+    assert_eq!(part2(INPUT), 337);
+}
+
+#[bench]
+fn bench_day11_part1(b: &mut Bencher) {
+    b.iter(|| part1(INPUT))
+}
+
+#[bench]
+fn bench_day11_part2(b: &mut Bencher) {
+    b.iter(|| part2(INPUT))
 }
