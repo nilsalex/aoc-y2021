@@ -1,29 +1,6 @@
-#![feature(test)]
-mod bench;
+pub const INPUT: &str = include_str!("input.txt");
 
-use std::fs::File;
-use std::io::{self, BufRead};
-use utils::AocSolution;
-
-pub struct Solution {
-    input_path: String,
-}
-
-impl AocSolution<i32, usize> for Solution {
-    fn part1(&self) -> i32 {
-        part1(&self.input_path)
-    }
-    fn part2(&self) -> usize {
-        part2(&self.input_path)
-    }
-    fn with_input_path(input_path: &str) -> Self {
-        Solution {
-            input_path: input_path.to_owned(),
-        }
-    }
-}
-
-fn score(closer: char) -> i32 {
+fn score(closer: char) -> usize {
     match closer {
         ')' => 3,
         ']' => 57,
@@ -61,12 +38,9 @@ fn parse_line(line: &str) -> Result<Vec<char>, char> {
     Ok(open_stack)
 }
 
-fn part1(input_path: &str) -> i32 {
-    let file = File::open(input_path).unwrap();
-    let lines = io::BufReader::new(file).lines().flatten();
-
-    lines
-        .filter_map(|line| match parse_line(&line) {
+pub fn part1(s: &str) -> usize {
+    s.lines()
+        .filter_map(|line| match parse_line(line) {
             Ok(_) => None,
             Err(c) => Some(score(c)),
         })
@@ -83,15 +57,38 @@ fn stack_score(stack: &[char]) -> usize {
     })
 }
 
-fn part2(input_path: &str) -> usize {
-    let file = File::open(input_path).unwrap();
-    let lines = io::BufReader::new(file).lines().flatten();
-
-    let mut scores: Vec<usize> = lines
-        .filter_map(|line| parse_line(&line).ok().map(|stack| stack_score(&stack)))
+pub fn part2(s: &str) -> usize {
+    let mut scores: Vec<usize> = s
+        .lines()
+        .filter_map(|line| parse_line(line).ok().map(|stack| stack_score(&stack)))
         .collect();
 
     scores.sort_unstable();
 
     scores[scores.len() / 2]
+}
+
+extern crate test;
+
+#[cfg(test)]
+use test::Bencher;
+
+#[test]
+fn test_day10_part1() {
+    assert_eq!(part1(INPUT), 168417);
+}
+
+#[test]
+fn test_day10_part2() {
+    assert_eq!(part2(INPUT), 2802519786);
+}
+
+#[bench]
+fn bench_day10_part1(b: &mut Bencher) {
+    b.iter(|| part1(INPUT))
+}
+
+#[bench]
+fn bench_day10_part2(b: &mut Bencher) {
+    b.iter(|| part2(INPUT))
 }
