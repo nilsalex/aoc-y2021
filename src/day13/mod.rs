@@ -1,51 +1,29 @@
-#![feature(test)]
-mod bench;
-
 use std::cmp::Ordering;
 use std::collections::HashSet;
-use std::fs::File;
-use std::io::{self, BufRead};
-use utils::AocSolution;
 
-pub struct Solution {
-    input_path: String,
-}
-
-impl AocSolution<usize, String> for Solution {
-    fn part1(&self) -> usize {
-        part1(&self.input_path)
-    }
-    fn part2(&self) -> String {
-        part2(&self.input_path)
-    }
-    fn with_input_path(input_path: &str) -> Self {
-        Solution {
-            input_path: input_path.to_owned(),
-        }
-    }
-}
+pub const INPUT: &str = include_str!("input.txt");
 
 struct Data {
     points: HashSet<(u32, u32)>,
     foldings: Vec<(char, u32)>,
 }
 
-fn part1(input_path: &str) -> usize {
+pub fn part1(s: &str) -> usize {
     let Data {
         mut points,
         foldings,
-    } = parse_input(input_path);
+    } = parse_input(s);
 
     fold(&mut points, foldings[0].0, foldings[0].1);
 
     points.len()
 }
 
-fn part2(input_path: &str) -> String {
+pub fn part2(s: &str) -> String {
     let Data {
         mut points,
         foldings,
-    } = parse_input(input_path);
+    } = parse_input(s);
 
     foldings.iter().for_each(|(dir, pos)| {
         fold(&mut points, *dir, *pos);
@@ -83,21 +61,19 @@ fn parse_folding(line: &str) -> (char, u32) {
     )
 }
 
-fn parse_input(input_path: &str) -> Data {
-    let file = File::open(input_path).unwrap();
-    let mut lines = io::BufReader::new(file).lines().flatten();
-
+fn parse_input(s: &str) -> Data {
+    let mut lines = s.lines();
     let mut points: HashSet<(u32, u32)> = HashSet::new();
     let mut line = lines.next().unwrap();
     while !line.is_empty() {
-        let point = parse_point(&line);
+        let point = parse_point(line);
         points.insert(point);
         line = lines.next().unwrap();
     }
 
     let mut foldings: Vec<(char, u32)> = vec![];
     for line_ in lines {
-        let folding = parse_folding(&line_);
+        let folding = parse_folding(line_);
         foldings.push(folding);
     }
 
@@ -130,4 +106,29 @@ fn fold(points: &mut HashSet<(u32, u32)>, dir: char, pos: u32) {
             unreachable!();
         }
     })
+}
+
+extern crate test;
+
+#[cfg(test)]
+use test::Bencher;
+
+#[test]
+fn test_day13_part1() {
+    assert_eq!(part1(INPUT), 638);
+}
+
+#[test]
+fn test_day13_part2() {
+    assert_eq!(part2(INPUT), "░▓▓░░░░▓▓░░▓▓░░▓░░▓░▓▓▓░░░▓▓░░▓▓▓░░▓▓▓░\n▓░░▓░░░░▓░▓░░▓░▓░▓░░▓░░▓░▓░░▓░▓░░▓░▓░░▓\n▓░░░░░░░▓░▓░░░░▓▓░░░▓▓▓░░▓░░▓░▓░░▓░▓▓▓░\n▓░░░░░░░▓░▓░░░░▓░▓░░▓░░▓░▓▓▓▓░▓▓▓░░▓░░▓\n▓░░▓░▓░░▓░▓░░▓░▓░▓░░▓░░▓░▓░░▓░▓░░░░▓░░▓\n░▓▓░░░▓▓░░░▓▓░░▓░░▓░▓▓▓░░▓░░▓░▓░░░░▓▓▓░\n");
+}
+
+#[bench]
+fn bench_day13_part1(b: &mut Bencher) {
+    b.iter(|| part1(INPUT))
+}
+
+#[bench]
+fn bench_day13_part2(b: &mut Bencher) {
+    b.iter(|| part2(INPUT))
 }
