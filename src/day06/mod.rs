@@ -1,28 +1,6 @@
-#![feature(test)]
-mod bench;
-
-use std::fs::File;
-use std::io::{self, BufRead};
 use std::num::ParseIntError;
-use utils::AocSolution;
 
-pub struct Solution {
-    input_path: String,
-}
-
-impl AocSolution<usize, usize> for Solution {
-    fn part1(&self) -> usize {
-        part1(&self.input_path)
-    }
-    fn part2(&self) -> usize {
-        part2(&self.input_path)
-    }
-    fn with_input_path(input_path: &str) -> Self {
-        Solution {
-            input_path: input_path.to_owned(),
-        }
-    }
-}
+pub const INPUT: &str = include_str!("input.txt");
 
 #[derive(Debug)]
 enum Error {
@@ -31,8 +9,8 @@ enum Error {
     IO,
 }
 
-impl From<io::Error> for Error {
-    fn from(_: io::Error) -> Self {
+impl From<std::io::Error> for Error {
+    fn from(_: std::io::Error) -> Self {
         Error::IO
     }
 }
@@ -43,8 +21,8 @@ impl From<std::num::ParseIntError> for Error {
     }
 }
 
-fn part1(input_path: &str) -> usize {
-    let fish: Vec<u8> = parse_fish(input_path).unwrap();
+pub fn part1(s: &str) -> usize {
+    let fish: Vec<u8> = parse_fish(s).unwrap();
     let mut fish_hist: [usize; 9] = new_hist(&fish);
 
     for _ in 0..80 {
@@ -54,8 +32,8 @@ fn part1(input_path: &str) -> usize {
     fish_hist.iter().sum()
 }
 
-fn part2(input_path: &str) -> usize {
-    let fish: Vec<u8> = parse_fish(input_path).unwrap();
+pub fn part2(s: &str) -> usize {
+    let fish: Vec<u8> = parse_fish(s).unwrap();
     let mut fish_hist: [usize; 9] = new_hist(&fish);
 
     for _ in 0..256 {
@@ -82,15 +60,38 @@ fn next(fish_hist: &mut [usize]) {
         fish_hist[n] = fish_hist[n + 1];
     }
 
-    fish_hist[6] = fish_hist[7] + new_fish;
+    fish_hist[6] += new_fish;
     fish_hist[8] = new_fish;
 }
 
-fn parse_fish(filename: &str) -> Result<Vec<u8>, Error> {
-    let file = File::open(filename)?;
-    let mut lines = io::BufReader::new(file).lines();
-    let line = lines.next().ok_or(Error::ParseFile)??;
+fn parse_fish(s: &str) -> Result<Vec<u8>, Error> {
+    let line = s.lines().next().ok_or(Error::ParseFile)?;
     line.split(',')
         .map(|s| s.parse().map_err(Error::from))
         .collect()
+}
+
+extern crate test;
+
+#[cfg(test)]
+use test::Bencher;
+
+#[test]
+fn test_day06_part1() {
+    assert_eq!(part1(INPUT), 366057);
+}
+
+#[test]
+fn test_day06_part2() {
+    assert_eq!(part2(INPUT), 1653559299811);
+}
+
+#[bench]
+fn bench_day06_part1(b: &mut Bencher) {
+    b.iter(|| part1(INPUT))
+}
+
+#[bench]
+fn bench_day06_part2(b: &mut Bencher) {
+    b.iter(|| part2(INPUT))
 }
