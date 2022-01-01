@@ -27,4 +27,6 @@ fn main() {
     day!(day10, part2);
     day!(day11, part1);
     day!(day11, part2);
+    day!(day12, part1);
+    day!(day12, part2);
 }

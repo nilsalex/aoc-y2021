@@ -1,28 +1,6 @@
-#![feature(test)]
-mod bench;
-
 use std::collections::{HashMap, HashSet};
-use std::fs::File;
-use std::io::{self, BufRead};
-use utils::AocSolution;
 
-pub struct Solution {
-    input_path: String,
-}
-
-impl AocSolution<usize, usize> for Solution {
-    fn part1(&self) -> usize {
-        part1(&self.input_path)
-    }
-    fn part2(&self) -> usize {
-        part2(&self.input_path)
-    }
-    fn with_input_path(input_path: &str) -> Self {
-        Solution {
-            input_path: input_path.to_owned(),
-        }
-    }
-}
+pub const INPUT: &str = include_str!("input.txt");
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 enum Node {
@@ -125,10 +103,7 @@ fn get_or_add_node(nodes_dict: &mut HashMap<String, Node>, name: &str) -> Node {
     }
 }
 
-fn parse_input(input_path: &str) -> HashMap<Node, Vec<Node>> {
-    let file = File::open(input_path).unwrap();
-    let lines = io::BufReader::new(file).lines().flatten();
-
+fn parse_input(s: &str) -> HashMap<Node, Vec<Node>> {
     let mut nodes_dict: HashMap<String, Node> = HashMap::from([
         ("start".to_owned(), Node::Start),
         ("end".to_owned(), Node::End),
@@ -136,7 +111,7 @@ fn parse_input(input_path: &str) -> HashMap<Node, Vec<Node>> {
 
     let mut edges: HashMap<Node, Vec<Node>> = HashMap::new();
 
-    lines.for_each(|line| {
+    s.lines().for_each(|line| {
         let split = line.split('-').collect::<Vec<&str>>();
         let node1 = get_or_add_node(&mut nodes_dict, split[0]);
         let node2 = get_or_add_node(&mut nodes_dict, split[1]);
@@ -147,8 +122,8 @@ fn parse_input(input_path: &str) -> HashMap<Node, Vec<Node>> {
     edges
 }
 
-fn part1(input_path: &str) -> usize {
-    let graph = parse_input(input_path);
+pub fn part1(s: &str) -> usize {
+    let graph = parse_input(s);
 
     let mut state = State {
         small_visited: HashSet::new(),
@@ -162,8 +137,8 @@ fn part1(input_path: &str) -> usize {
     state.number_paths
 }
 
-fn part2(input_path: &str) -> usize {
-    let graph = parse_input(input_path);
+pub fn part2(s: &str) -> usize {
+    let graph = parse_input(s);
 
     let mut state = State {
         small_visited: HashSet::new(),
@@ -175,4 +150,29 @@ fn part2(input_path: &str) -> usize {
     dfs(&mut state, &graph, &Node::Start, &Node::End, true);
 
     state.number_paths
+}
+
+extern crate test;
+
+#[cfg(test)]
+use test::Bencher;
+
+#[test]
+fn test_day12_part1() {
+    assert_eq!(part1(INPUT), 3450);
+}
+
+#[test]
+fn test_day12_part2() {
+    assert_eq!(part2(INPUT), 96528);
+}
+
+#[bench]
+fn bench_day12_part1(b: &mut Bencher) {
+    b.iter(|| part1(INPUT))
+}
+
+#[bench]
+fn bench_day12_part2(b: &mut Bencher) {
+    b.iter(|| part2(INPUT))
 }
